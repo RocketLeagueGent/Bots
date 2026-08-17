@@ -1,0 +1,73 @@
+[13:39:11] [main/INFO] (ViaProxy) Initializing ViaProxy GUI v3.4.13-SNAPSHOT (git-ViaProxy-3.4.13-SNAPSHOT:552dc5e) (Injected using Launcher Agent)...
+[13:39:11] [main/INFO] (ViaProxy) Using java version: OpenJDK 64-Bit Server VM 25.0.4 (Eclipse Adoptium) on Windows 11
+[13:39:11] [main/INFO] (ViaProxy) Available memory (bytes): 2103443456
+[13:39:11] [main/INFO] (ViaProxy) Working directory: C:\Users\pana\Desktop\Bots\services\viaproxy
+[13:39:12] [main/DEBUG] (io.netty.util.internal.logging.InternalLoggerFactory) Using SLF4J as the default logging framework
+[13:39:12] [main/DEBUG] (io.netty.util.ResourceLeakDetector) -Dio.netty.leakDetection.level: simple
+[13:39:12] [main/DEBUG] (io.netty.util.ResourceLeakDetector) -Dio.netty.leakDetection.targetRecords: 4
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent0) Java version: 25
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent0) -Dio.netty.noUnsafe: false
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent0) sun.misc.Unsafe: unavailable (io.netty.noUnsafe=true by default on Java 25+)
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent0) java.nio.DirectByteBuffer.<init>(long, {int,long}): unavailable
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) maxDirectMemory: 2103443456 bytes (maybe)
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.tmpdir: C:\Users\pana\AppData\Local\Temp (java.io.tmpdir)
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.bitMode: 64 (sun.arch.data.model)
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) Platform: Windows
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.maxDirectMemory: 2103443456 bytes
+[13:39:12] [main/DEBUG] (io.netty.util.internal.CleanerJava9) java.nio.ByteBuffer.cleaner(): unavailable
+java.lang.UnsupportedOperationException: sun.misc.Unsafe unavailable
+	at io.netty.util.internal.CleanerJava9.<clinit>(CleanerJava9.java:70)
+	at io.netty.util.internal.PlatformDependent.<clinit>(PlatformDependent.java:209)
+	at net.raphimc.viaproxy.ViaProxy.loadNetty(ViaProxy.java:315)
+	at net.raphimc.viaproxy.ViaProxy.injectedMain(ViaProxy.java:213)
+	at net.raphimc.viaproxy.ViaProxy.main(ViaProxy.java:102)
+[13:39:12] [main/DEBUG] (io.netty.util.internal.CleanerJava24Linker) java.nio.ByteBuffer.cleaner(): available
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.noPreferDirect: false
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.ignoreExpensiveClean: false
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.jfr.enabled: true
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) java.lang.invoke.VarHandle: available
+[13:39:12] [main/DEBUG] (io.netty.util.internal.PlatformDependent) -Dio.netty.varHandle.enabled: true
+[13:39:12] [main/DEBUG] (io.netty.util.concurrent.GlobalEventExecutor) -Dio.netty.globalEventExecutor.quietPeriodSeconds: 1
+[13:39:12] [main/DEBUG] (io.netty.util.internal.InternalThreadLocalMap) -Dio.netty.threadLocalMap.stringBuilder.initialSize: 1024
+[13:39:12] [main/DEBUG] (io.netty.util.internal.InternalThreadLocalMap) -Dio.netty.threadLocalMap.stringBuilder.maxSize: 4096
+[13:39:13] [Via-Mappingloader-1/DEBUG] (io.netty.buffer.AbstractByteBuf) -Dio.netty.buffer.checkAccessible: true
+[13:39:13] [Via-Mappingloader-1/DEBUG] (io.netty.buffer.AbstractByteBuf) -Dio.netty.buffer.checkBounds: true
+[13:39:13] [Via-Mappingloader-1/DEBUG] (io.netty.util.ResourceLeakDetectorFactory) Loaded default ResourceLeakDetector: io.netty.util.ResourceLeakDetector@6f4ae250
+[13:39:13] [Via-Mappingloader-1/INFO] (ViaVersion) Loading block connection mappings ...
+[13:39:14] [main/INFO] (ViaBackwards) Loading translations...
+[13:39:14] [main/INFO] (ViaBackwards) Registering protocols...
+[13:39:14] [main/INFO] (ViaRewind) Registering protocols...
+[13:39:15] [main/DEBUG] (io.netty.channel.MultithreadEventLoopGroup) -Dio.netty.eventLoopThreads: 24
+[13:39:15] [main/DEBUG] (io.netty.channel.nio.NioIoHandler) -Dio.netty.noKeySetOptimization: false
+[13:39:15] [main/DEBUG] (io.netty.channel.nio.NioIoHandler) -Dio.netty.selectorAutoRebuildThreshold: 512
+[13:39:15] [main/DEBUG] (io.netty.util.internal.PlatformDependent) org.jctools-core.MpscChunkedArrayQueue: unavailable
+[13:39:15] [main/DEBUG] (io.netty.channel.DefaultChannelId) -Dio.netty.processId: 4844 (auto-detected)
+[13:39:15] [main/DEBUG] (io.netty.util.NetUtil) -Djava.net.preferIPv4Stack: false
+[13:39:15] [main/DEBUG] (io.netty.util.NetUtil) -Djava.net.preferIPv6Addresses: false
+[13:39:15] [main/DEBUG] (io.netty.util.NetUtilInitializations) Loopback interface: loopback_0 (Software Loopback Interface 1, 0:0:0:0:0:0:0:1)
+[13:39:15] [main/DEBUG] (io.netty.util.NetUtil) Failed to get SOMAXCONN from sysctl and file \proc\sys\net\core\somaxconn. Default: 200
+[13:39:15] [main/DEBUG] (io.netty.channel.DefaultChannelId) -Dio.netty.machineId: c8:5e:a9:ff:fe:be:d5:4c (auto-detected)
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.numHeapArenas: 24
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.numDirectArenas: 24
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.pageSize: 8192
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.maxOrder: 9
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.chunkSize: 4194304
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.smallCacheSize: 256
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.normalCacheSize: 64
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.maxCachedBufferCapacity: 32768
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.cacheTrimInterval: 8192
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.cacheTrimIntervalMillis: 0
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.useCacheForAllThreads: false
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.maxCachedByteBuffersPerChunk: 1023
+[13:39:15] [main/DEBUG] (io.netty.buffer.PooledByteBufAllocator) -Dio.netty.allocator.disableCacheFinalizersForFastThreadLocalThreads: false
+[13:39:15] [main/DEBUG] (io.netty.buffer.ByteBufUtil) -Dio.netty.allocator.type: pooled
+[13:39:15] [main/DEBUG] (io.netty.buffer.ByteBufUtil) -Dio.netty.threadLocalDirectBufferSize: 0
+[13:39:15] [main/DEBUG] (io.netty.buffer.ByteBufUtil) -Dio.netty.maxThreadLocalCharBufferSize: 16384
+[13:39:15] [main/DEBUG] (io.netty.bootstrap.ChannelInitializerExtensions) -Dio.netty.bootstrap.extensions: null
+[13:39:15] [main/INFO] (ViaBedrock) Started resource pack HTTP server on http://127.0.0.1:58395/
+[13:39:15] [main/INFO] (ViaVersion) ViaVersion detected lowest supported version by the proxy: 1.7.2-1.7.5 (4)
+[13:39:15] [main/INFO] (ViaVersion) Highest supported version by the proxy: 26.2 (776)
+[13:39:16] [Via Async Task 1/INFO] (ViaVersion) You are running a development version of the plugin, please report any bugs to GitHub.
+[13:39:18] [Via Async Scheduler 0/INFO] (ViaVersion) Finished mapping loading, shutting down loader executor.
+[13:39:18] [main/INFO] (ViaProxy) ViaProxy started successfully!
+[13:39:19] [ForkJoinPool.commonPool-worker-1/WARN] (ViaProxy) You are running a dev version of ViaProxy
