@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIND ARMY — Command Center</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+    * { box-sizing: border-box; }
+    :root {
+        --bg: #0a0c10;
+        --panel: #12151d;
+        --panel2: #1a1f2b;
+        --panel3: #222838;
+        --border: #2a3142;
+        --text: #e3e9f5;
+        --muted: #8a94a8;
+        --green: #35d07f;
+        --red: #f2545b;
+        --blue: #4aa8ff;
+        --yellow: #f4c542;
+        --purple: #a06bff;
+        --teal: #35c8d0;
+    }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif; }
+    .topbar {
+        display: flex; align-items: center; gap: 14px; padding: 12px 22px;
+        background: linear-gradient(90deg, #0e1118, #141a28); border-bottom: 1px solid var(--border);
+        position: sticky; top: 0; z-index: 50; flex-wrap: wrap;
+    }
+    .brand { font-size: 1.4rem; font-weight: 900; letter-spacing: 1.5px; color: #fff; }
+    .brand span { color: var(--purple); }
+    .status-badge { font-size: .72rem; padding: 3px 10px; border-radius: 12px; background: #222833; color: var(--muted); }
+    .status-badge.online { color: var(--green); box-shadow: 0 0 8px rgba(53,208,127,.25); }
+    .status-badge.offline { color: var(--red); }
+    .spacer { flex: 1; }
+    .tabs { display: flex; gap: 4px; }
+    .tab-btn {
+        background: transparent; color: var(--muted); border: none; cursor: pointer;
+        padding: 8px 18px; font-size: .95rem; border-radius: 8px 8px 0 0; font-weight: 700;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,.05); }
+    .tab-btn.active { color: #fff; background: var(--panel); border: 1px solid var(--border); border-bottom: none; }
+    .tab-content { display: none; padding: 20px; max-width: 1600px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+    .card h2 { margin: 0 0 14px 0; font-size: 1.05rem; color: #fff; display: flex; align-items: center; gap: 8px; }
+    .card h2 .sub { font-size: .7rem; color: var(--muted); font-weight: 400; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .field input, .field select {
+        background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+        border-radius: 8px; padding: 8px 10px; font-size: .9rem; min-width: 120px;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--blue); }
+    .field .chk { min-width: auto; width: auto; }
+
+    .btn {
+        background: var(--panel3); color: var(--text); border: 1px solid var(--border);
+        border-radius: 8px; padding: 8px 14px; cursor: pointer; font-size: .84rem; font-weight: 600;
+        transition: all .12s; white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--blue); filter: brightness(1.15); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+    .btn-primary { background: linear-gradient(90deg, #3d6bff, #7a4bff); border: none; color: #fff; }
+    .btn-danger { background: linear-gradient(90deg, #c0392b, #e74c3c); border: none; color: #fff; }
+    .btn-green { background: linear-gradient(90deg, #1fa65a, #35d07f); border: none; color: #fff; }
+    .btn-teal { background: linear-gradient(90deg, #1e8f96, #35c8d0); border: none; color: #fff; }
+    .btn-purple { background: linear-gradient(90deg, #5a3bd0, #a06bff); border: none; color: #fff; }
+    .btn-ghost { background: transparent; }
+    .btn-small { padding: 4px 10px; font-size: .75rem; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .agent-card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .agent-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--panel2); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+    .dot.online { background: var(--green); box-shadow: 0 0 7px var(--green); }
+    .dot.joining { background: var(--yellow); }
+    .agent-name { font-weight: 800; color: #fff; font-size: .93rem; }
+    .tag { font-size: .6rem; background: var(--purple); color: #fff; border-radius: 8px; padding: 2px 8px; letter-spacing: .6px; }
+    .agent-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .stat { background: var(--panel2); border-radius: 8px; padding: 6px 8px; font-size: .75rem; color: var(--muted); }
+    .stat b { color: var(--text); font-weight: 600; }
+    .msg-line { font-size: .74rem; color: var(--muted); font-style: italic; min-height: 16px; word-break: break-word; }
+    .agent-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+    .tpa-box { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .tpa-box .tpa-title { font-size: .68rem; color: var(--teal); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; }
+    .tpa-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .viewer-frame { width: 100%; height: 200px; border: none; border-radius: 8px; background: #000; display: block; }
+    .viewer-wrap { position: relative; }
+    .viewer-off { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: .8rem; }
+
+    .chat-window { height: 420px; overflow-y: auto; background: var(--panel2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .chat-msg { max-width: 80%; padding: 8px 12px; border-radius: 12px; font-size: .88rem; line-height: 1.4; }
+    .chat-msg .who { font-size: .68rem; color: var(--muted); margin-bottom: 2px; }
+    .chat-msg.bot { background: #1f2740; align-self: flex-start; border-top-left-radius: 3px; }
+    .chat-msg.me { background: #20352a; align-self: flex-end; border-top-right-radius: 3px; }
+    .chat-input-row { display: flex; gap: 10px; margin-top: 12px; }
+    .chat-input-row input { flex: 1; background: var(--panel2); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 12px 14px; font-size: .95rem; }
+    .chat-input-row input:focus { outline: none; border-color: var(--blue); }
+
+    .log { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; font-size: .8rem; color: var(--muted); max-height: 180px; overflow-y: auto; font-family: Consolas, monospace; }
+    .log .err { color: var(--red); }
+    .log .ok { color: var(--green); }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+    .toast-wrap { position: fixed; bottom: 18px; right: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 100; }
+    .toast { background: var(--panel3); border: 1px solid var(--border); border-left: 4px solid var(--blue); padding: 10px 14px; border-radius: 8px; font-size: .82rem; box-shadow: 0 4px 14px rgba(0,0,0,.4); animation: slideIn .2s ease; }
+    .toast.error { border-left-color: var(--red); }
+    .toast.ok { border-left-color: var(--green); }
+    @keyframes slideIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .empty-state { text-align: center; color: var(--muted); padding: 40px 0; }
+    .empty-state .big { font-size: 2.2rem; margin-bottom: 8px; }
+    .hint { font-size: .72rem; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="brand">MIND<span>ARMY</span></div>
+    <span id="msStatus" class="status-badge offline">mindserver offline</span>
+    <div class="spacer"></div>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="fleet">Fleet</button>
+        <button class="tab-btn" data-tab="console">Console</button>
+        <button class="tab-btn" data-tab="agents">All Agents</button>
+    </div>
+</div>
+
+<!-- ==================== FLEET TAB ==================== -->
+<div id="tab-fleet" class="tab-content active">
+
+    <div class="card">
+        <h2>Deploy Fleet <span class="sub">— random usernames, offline auth, auto register/login</span></h2>
+        <div class="row">
+            <div class="field">
+                <label>Server Host</label>
+                <input id="fleet-host" value="" placeholder="e.g. myserver.aternos.me" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>Port</label>
+                <input id="fleet-port" value="25565" type="number">
+            </div>
+            <div class="field">
+                <label>Auth</label>
+                <select id="fleet-auth">
+                    <option value="offline" selected>offline (cracked)</option>
+                    <option value="microsoft">microsoft (premium)</option>
+                </select>
+            </div>
+            <div class="field">
+                <label>MC Version</label>
+                <input id="fleet-version" value="auto" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>Bots to spawn</label>
+                <input id="fleet-count" value="198" type="number" min="1" max="200">
+            </div>
+            <div class="field">
+                <label>Master player</label>
+                <input id="fleet-master" value="RocketLeagueGent" spellcheck="false">
+            </div>
+            <div class="field">
+                <label>Perspectives</label>
+                <input id="fleet-render" type="checkbox" class="chk">
+            </div>
+            <button id="spawnFleetBtn" class="btn btn-primary">DEPLOY FLEET</button>
+        </div>
+        <div class="row" style="margin-top:12px; align-items:center;">
+            <span style="font-size:.78rem; color:var(--muted);">Quick presets:</span>
+            <button class="btn btn-small" onclick="setFleetCount(10)">10</button>
+            <button class="btn btn-small" onclick="setFleetCount(50)">50</button>
+            <button class="btn btn-small" onclick="setFleetCount(198)">198</button>
+            <button class="btn btn-small" onclick="setFleetCount(200)">Max 200</button>
+        </div>
+        <div class="hint">Each bot gets a random username and its own personality. Bots only take orders from the master and this dashboard. Start the Aternos server BEFORE deploying. Keep Perspectives OFF for big fleets (one GPU viewer per bot).</div>
+    </div>
+
+    <div class="card">
+        <h2>Fleet Command</h2>
+        <div class="row">
+            <div class="field" style="flex:1;">
+                <label>Broadcast message / order (as master)</label>
+                <input id="fleet-broadcast" placeholder="e.g. follow me / attack JohnMinecraft123 / mine 10 oak_log" spellcheck="false">
+            </div>
+            <button id="broadcastBtn" class="btn btn-green">Send to all</button>
+            <button id="toggleViewsBtn" class="btn btn-purple">Perspectives: ON</button>
+            <button id="destroyFleetBtn" class="btn btn-danger">Remove ALL fleet</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Fleet TPA <span class="sub">— teleport commands sent to every bot at once</span></h2>
+        <div class="row">
+            <div class="field">
+                <label>TPA target (player)</label>
+                <input id="fleet-tpa-target" value="RocketLeagueGent" spellcheck="false">
+            </div>
+            <button class="btn btn-teal" id="fleetTpaBtn">/tpa target</button>
+            <button class="btn btn-teal" id="fleetTpaHereBtn">/tpahere target</button>
+            <button class="btn btn-green" id="fleetTpAcceptBtn">/tpaccept all</button>
+            <button class="btn btn-danger" id="fleetTpDenyBtn">/tpdeny all</button>
+            <button class="btn btn-purple" id="fleetTpAutoBtn">/tpauto all</button>
+            <button class="btn btn-small btn-ghost" id="fleetTpCancelBtn">/tpcancel all</button>
+        </div>
+        <div class="hint">Every button above sends the raw Minecraft command to all online fleet bots instantly — no AI involved, no API cost.</div>
+    </div>
+
+    <div id="fleetLog" class="log" style="margin-bottom:16px;"></div>
+    <div id="fleetGrid" class="grid">
+        <div class="empty-state" style="grid-column:1/-1;"><div class="big">🤖</div>No fleet deployed yet.<br>Enter your server IP above and hit DEPLOY FLEET.</div>
+    </div>
+</div>
+
+<!-- ==================== CONSOLE TAB ==================== -->
+<div id="tab-console" class="tab-content">
+    <div class="card">
+        <div class="row" style="align-items:center;">
+            <span id="consoleDot" class="dot offline"></span>
+            <h2 style="margin:0;">Console — your friendly AI companion</h2>
+            <div class="spacer"></div>
+            <button id="consoleConnectBtn" class="btn btn-small">Connect</button>
+            <button id="consoleRestartBtn" class="btn btn-small">Restart</button>
+            <button id="consoleStopBtn" class="btn btn-danger btn-small">Disconnect</button>
+            <button id="consoleRecreateBtn" class="btn btn-purple btn-small">Recreate Console</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+            <div class="stat"><b id="consoleHealth">health: -</b></div>
+            <div class="stat"><b id="consoleHunger">hunger: -</b></div>
+            <div class="stat"><b id="consolePos">pos: -</b></div>
+            <div class="stat"><b id="consoleAction">action: -</b></div>
+            <div class="stat"><b id="consoleBiome">biome: -</b></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Chat with Console</h2>
+        <div id="consoleChat" class="chat-window"></div>
+        <div class="chat-input-row">
+            <input id="consoleInput" placeholder="Say something to Console..." spellcheck="false">
+            <button id="consoleSendBtn" class="btn btn-primary">Send</button>
+        </div>
+        <div class="hint">Console replies via /w RocketLeagueGent so messages stay private. TPA buttons for Console:</div>
+        <div class="row" style="margin-top:8px;">
+            <div class="field">
+                <label>Console TPA target</label>
+                <input id="console-tpa-target" value="RocketLeagueGent" spellcheck="false">
+            </div>
+            <button class="btn btn-teal btn-small" id="consoleTpaBtn">/tpa</button>
+            <button class="btn btn-teal btn-small" id="consoleTpaHereBtn">/tpahere</button>
+            <button class="btn btn-green btn-small" id="consoleTpAcceptBtn">/tpaccept</button>
+            <button class="btn btn-danger btn-small" id="consoleTpDenyBtn">/tpdeny</button>
+            <button class="btn btn-purple btn-small" id="consoleTpAutoBtn">/tpauto</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== ALL AGENTS TAB ==================== -->
+<div id="tab-agents" class="tab-content">
+    <div class="card">
+        <div class="row">
+            <h2 style="margin:0;">All Agents</h2>
+            <div class="spacer"></div>
+            <button id="stopAllAgentsBtn" class="btn btn-danger btn-small">Disconnect All</button>
+            <button id="fullShutdownBtn" class="btn btn-danger btn-small">Full Shutdown</button>
+        </div>
+    </div>
+    <div id="agentsGrid" class="grid"></div>
+</div>
+
+<div id="toasts" class="toast-wrap"></div>
+
+<script>
+    const socket = io({ path: window.location.pathname + 'socket.io' });
+
+    // ---------- global state ----------
+    let currentAgents = [];
+    let lastStates = {};
+    let lastMessages = {};
+    let agentSettings = {};
+    let fleetRenderEnabled = true;
+    const consoleChatLog = [];
+    const fleetNames = new Set();
+
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    function toast(msg, kind = '') {
+        const el = document.createElement('div');
+        el.className = 'toast ' + kind;
+        el.textContent = msg;
+        $('toasts').appendChild(el);
+        setTimeout(() => el.remove(), 3200);
+    }
+    function logTo(el, msg, kind = '') {
+        const line = document.createElement('div');
+        line.className = kind;
+        line.textContent = msg;
+        el.appendChild(line);
+        el.scrollTop = el.scrollHeight;
+    }
+
+    // ---------- tab switching ----------
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            $('tab-' + btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // ---------- master helpers ----------
+    function masterName() { return $('fleet-master').value.trim() || 'RocketLeagueGent'; }
+
+    // Send a raw chat command to one agent (no LLM).
+    function execCmd(name, command) {
+        socket.emit('execute-chat-command', name, { command });
+        logTo($('fleetLog'), `${name}: ${command}`, 'ok');
+    }
+    // Send a raw chat command to the whole fleet.
+    function broadcastCmd(command) {
+        socket.emit('broadcast-chat-command', { command, only_fleet: true });
+        logTo($('fleetLog'), `FLEET: ${command}`, 'ok');
+    }
+
+    // ---------- settings cache ----------
+    function fetchAgentSettings(name) {
+        return new Promise((resolve) => {
+            if (agentSettings[name]) return resolve(agentSettings[name]);
+            socket.emit('get-settings', name, res => {
+                if (res.settings) { agentSettings[name] = res.settings; resolve(res.settings); }
+                else resolve(null);
+            });
+        });
+    }
+
+    // ==================== FLEET ====================
+    function setFleetCount(n) { $('fleet-count').value = n; }
+    window.setFleetCount = setFleetCount;
+
+    $('spawnFleetBtn').addEventListener('click', async () => {
+        let host = $('fleet-host').value.trim();
+        if (!host) return toast('Enter a server host.', 'error');
+        // Strip port from host if user typed "host:port" in host field
+        const colonIdx = host.lastIndexOf(':');
+        if (colonIdx > 0 && /^\d+$/.test(host.slice(colonIdx + 1))) {
+            const extractedPort = host.slice(colonIdx + 1);
+            host = host.slice(0, colonIdx);
+            $('fleet-host').value = host;
+            $('fleet-port').value = extractedPort;
+        }
+        const data = {
+            host: host,
+            port: $('fleet-port').value,
+            auth: $('fleet-auth').value,
+            minecraft_version: $('fleet-version').value.trim(),
+            count: parseInt($('fleet-count').value) || 1,
+            master_name: masterName(),
+            render_view: $('fleet-render').checked,
+        };
+        if (!data.host) return toast('Enter a server host.', 'error');
+        $('spawnFleetBtn').disabled = true;
+        logTo($('fleetLog'), `Deploying ${data.count} bot(s) to ${data.host}:${data.port}...`, 'ok');
+        try {
+            const res = await new Promise((resolve, reject) => {
+                socket.emit('spawn-fleet', data, (r) => resolve(r));
+                setTimeout(() => reject(new Error('Deploy request timed out')), 120000);
+            });
+            const logEl = $('fleetLog');
+            (res.created || []).forEach(c => {
+                fleetNames.add(c.username);
+                logTo(logEl, `Created ${c.username} (view port ${c.viewerPort})`, 'ok');
+            });
+            (res.failed || []).forEach(f => logTo(logEl, `${f.username || 'bot'} failed: ${f.error}`, 'err'));
+            if (!res.created || res.created.length === 0) toast('No bots could be created. Check the log.', 'error');
+            else toast(`Deployed ${res.created.length} bot(s)!`, 'ok');
+        } catch (err) {
+            logTo($('fleetLog'), `Deploy error: ${err.message}`, 'err');
+            toast(`Deploy error: ${err.message}`, 'error');
+        } finally {
+            $('spawnFleetBtn').disabled = false;
+        }
+    });
+
+    $('broadcastBtn').addEventListener('click', () => {
+        const msg = $('fleet-broadcast').value.trim();
+        if (!msg) return toast('Type a command first.', 'error');
+        socket.emit('broadcast-message', { message: msg, from: masterName(), only_fleet: true });
+        logTo($('fleetLog'), `Broadcast: "${msg}" → fleet`, 'ok');
+    });
+
+    $('destroyFleetBtn').addEventListener('click', () => {
+        if (confirm('Remove ALL fleet bots?')) {
+            socket.emit('destroy-fleet');
+            $('spawnFleetBtn').disabled = false;
+            toast('Fleet removed.', 'ok');
+        }
+    });
+
+    // ---------- Fleet-wide TPA ----------
+    $('fleetTpaBtn').addEventListener('click', () => broadcastCmd(`/tpa ${$('fleet-tpa-target').value.trim() || masterName()}`));
+    $('fleetTpaHereBtn').addEventListener('click', () => broadcastCmd(`/tpahere ${$('fleet-tpa-target').value.trim() || masterName()}`));
+    $('fleetTpAcceptBtn').addEventListener('click', () => broadcastCmd('/tpaccept'));
+    $('fleetTpDenyBtn').addEventListener('click', () => broadcastCmd('/tpdeny'));
+    $('fleetTpAutoBtn').addEventListener('click', () => broadcastCmd('/tpauto'));
+    $('fleetTpCancelBtn').addEventListener('click', () => broadcastCmd('/tpcancel'));
+
+    // ---------- Fleet view toggle ----------
+    $('toggleViewsBtn').addEventListener('click', () => {
+        fleetRenderEnabled = !fleetRenderEnabled;
+        $('toggleViewsBtn').textContent = `Perspectives: ${fleetRenderEnabled ? 'ON' : 'OFF'}`;
+        renderFleetGrid();
+    });
+
+    function sendToBot(name, message, from) {
+        socket.emit('send-message', name, { from, message });
+    }
+
+    function fleetCommand(name, message) {
+        sendToBot(name, message, masterName());
+    }
+
+    function cmdPrompt(name, verb, placeholder) {
+        const target = prompt(`${verb} which player/bot?`, placeholder || '');
+        if (target && target.trim()) {
+            fleetCommand(name, `${verb.toLowerCase()} ${target.trim()}`);
+            toast(`${verb} ${target.trim()} → ${name}`, 'ok');
+        }
+    }
+
+    // ---------- TPA helpers ----------
+    // tpaPlayer(bot): bot asks to teleport TO <target>
+    // tpaHere(bot): bot asks <target> to teleport TO it
+    // raw TPA buttons execute the command directly (no LLM).
+    function tpaPlayer(name) {
+        const target = prompt(`TPA to which player (${name})?`, masterName());
+        if (target && target.trim()) execCmd(name, `/tpa ${target.trim()}`);
+    }
+    function tpaHere(name) {
+        const target = prompt(`TPAhere — call which player (${name})?`, masterName());
+        if (target && target.trim()) execCmd(name, `/tpahere ${target.trim()}`);
+    }
+
+    let lastFleetSig = '';
+    function fleetRosterSig(fleet) {
+        return fleet.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${agentSettings[a.name]?.render_bot_view}`).join('§');
+    }
+
+    function fleetCardHTML(a) {
+        const canView = agentSettings[a.name]?.render_bot_view === true && a.in_game;
+        const dotClass = a.in_game ? 'online' : (a.socket_connected ? 'joining' : '');
+        return `
+            <div class="agent-card" id="fleet-${a.name}">
+                <div class="agent-head">
+                    <span class="dot ${dotClass}" id="fs-${a.name}-dot"></span>
+                    <span class="agent-name">${escapeHtml(a.name)}</span>
+                    <span class="tag">fleet</span>
+                </div>
+                <div class="agent-body">
+                    ${canView ? `<div class="viewer-wrap"><iframe class="viewer-frame" id="fs-${a.name}-view" src="http://localhost:${a.viewerPort}"></iframe></div>` : ''}
+                    <div class="stats-grid">
+                        <div class="stat">⚔ <b id="fs-${a.name}-health">-</b></div>
+                        <div class="stat">🍖 <b id="fs-${a.name}-hunger">-</b></div>
+                        <div class="stat">📍 <span id="fs-${a.name}-pos">-</span></div>
+                        <div class="stat">🌍 <b id="fs-${a.name}-biome">-</b></div>
+                        <div class="stat" style="grid-column:1/-1;">⚙ <b id="fs-${a.name}-action">...</b></div>
+                    </div>
+                    <div class="msg-line" id="fs-${a.name}-msg">“”</div>
+                    <div class="tpa-box">
+                        <div class="tpa-title">Teleport (instant, no AI)</div>
+                        <div class="tpa-actions">
+                            <button class="btn btn-teal btn-small" onclick="tpaPlayer('${a.name}')">tpa</button>
+                            <button class="btn btn-teal btn-small" onclick="tpaHere('${a.name}')">tpahere</button>
+                            <button class="btn btn-green btn-small" onclick="execCmd('${a.name}','/tpaccept')">accept</button>
+                            <button class="btn btn-danger btn-small" onclick="execCmd('${a.name}','/tpdeny')">deny</button>
+                            <button class="btn btn-purple btn-small" onclick="execCmd('${a.name}','/tpauto')">auto</button>
+                            <button class="btn btn-small" onclick="execCmd('${a.name}','/tpcancel')">cancel</button>
+                        </div>
+                    </div>
+                    <div class="agent-actions">
+                        <button class="btn btn-small" onclick="cmdPrompt('${a.name}','Follow','')">Follow</button>
+                        <button class="btn btn-small btn-danger" onclick="cmdPrompt('${a.name}','Attack','')">Attack</button>
+                        <button class="btn btn-small" onclick="cmdPrompt('${a.name}','GoTo','')">GoTo</button>
+                        <button class="btn btn-small" onclick="minePrompt('${a.name}')">Mine</button>
+                        <button class="btn btn-small btn-green" onclick="chatPrompt('${a.name}')">Chat</button>
+                        <button class="btn btn-small" onclick="fleetCommand('${a.name}','!stop')">Stop</button>
+                        ${canView ? `<button class="btn btn-small btn-purple" onclick="toggleOneView('${a.name}')">👁</button>` : ''}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function applyFleetViewState(name) {
+        const frame = $(`fs-${name}-view`);
+        if (!frame) return;
+        const canView = agentSettings[name]?.render_bot_view === true;
+        frame.style.display = (canView && fleetRenderEnabled && !fleetOneViewOff[name]) ? 'block' : 'none';
+    }
+
+    function renderFleetGrid() {
+        const grid = $('fleetGrid');
+        const fleet = currentAgents.filter(a => a.fleet === true);
+        if (fleet.length === 0) {
+            lastFleetSig = '';
+            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">🤖</div>No fleet deployed yet.<br>Enter your server IP above and hit DEPLOY FLEET.</div>';
+            return;
+        }
+        const sig = fleetRosterSig(fleet);
+        if (grid.dataset.rendered !== '1' || sig !== lastFleetSig) {
+            lastFleetSig = sig;
+            grid.dataset.rendered = '1';
+            grid.innerHTML = fleet.map(fleetCardHTML).join('');
+            fleet.forEach(a => applyFleetViewState(a.name));
+        }
+        updateFleetLive();
+        fleet.forEach(a => applyFleetViewState(a.name));
+    }
+
+    function updateFleetLive() {
+        currentAgents.filter(a => a.fleet).forEach(a => {
+            const st = lastStates[a.name];
+            const gm = st?.gameplay || {};
+            const act = st?.action || {};
+            const set = (key, val) => { const el = $(`fs-${a.name}-${key}`); if (el) el.textContent = val; };
+            set('health', (gm.health ?? '-') + '/20');
+            set('hunger', (gm.hunger ?? '-') + '/20');
+            set('pos', gm.position ? `x${gm.position.x}, y${gm.position.y}, z${gm.position.z}` : '-');
+            set('biome', gm.biome ?? '-');
+            set('action', act.current ?? '...');
+            const msgEl = $(`fs-${a.name}-msg`);
+            if (msgEl) msgEl.textContent = '“' + (lastMessages[a.name] || '') + '”';
+        });
+    }
+
+    function minePrompt(name) {
+        const block = prompt('Mine which block type?', 'oak_log');
+        if (!block || !block.trim()) return;
+        const num = prompt('How many?', '16');
+        fleetCommand(name, `mine ${num} ${block.trim()}`);
+        toast(`Mine ${block.trim()} → ${name}`, 'ok');
+    }
+    function chatPrompt(name) {
+        const m = prompt('Message to send:', '');
+        if (m && m.trim()) fleetCommand(name, m.trim());
+    }
+    window.cmdPrompt = cmdPrompt;
+    window.minePrompt = minePrompt;
+    window.chatPrompt = chatPrompt;
+    window.execCmd = execCmd;
+    window.tpaPlayer = tpaPlayer;
+    window.tpaHere = tpaHere;
+
+    function toggleOneView(name) {
+        fleetOneViewOff[name] = !fleetOneViewOff[name];
+        applyFleetViewState(name);
+    }
+    const fleetOneViewOff = {};
+    window.toggleOneView = toggleOneView;
+
+    // ==================== CONSOLE ====================
+    $('consoleSendBtn').addEventListener('click', sendConsoleMsg);
+    $('consoleInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendConsoleMsg(); });
+    function sendConsoleMsg() {
+        const input = $('consoleInput');
+        const msg = input.value.trim();
+        if (!msg) return;
+        addChatMsg('me', 'You', msg);
+        input.value = '';
+        socket.emit('send-message', 'Console', { from: masterName(), message: msg });
+    }
+
+    // Console TPA buttons (raw commands, no LLM)
+    $('consoleTpaBtn').addEventListener('click', () => execCmd('Console', `/tpa ${$('console-tpa-target').value.trim() || masterName()}`));
+    $('consoleTpaHereBtn').addEventListener('click', () => execCmd('Console', `/tpahere ${$('console-tpa-target').value.trim() || masterName()}`));
+    $('consoleTpAcceptBtn').addEventListener('click', () => execCmd('Console', '/tpaccept'));
+    $('consoleTpDenyBtn').addEventListener('click', () => execCmd('Console', '/tpdeny'));
+    $('consoleTpAutoBtn').addEventListener('click', () => execCmd('Console', '/tpauto'));
+
+    function addChatMsg(kind, who, msg) {
+        const chat = $('consoleChat');
+        const el = document.createElement('div');
+        el.className = 'chat-msg ' + kind;
+        el.innerHTML = `<div class="who">${escapeHtml(who)}</div>${escapeHtml(msg)}`;
+        chat.appendChild(el);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    function renderConsole() {
+        const c = currentAgents.find(a => a.name === 'Console');
+        const st = lastStates['Console'];
+        const gm = st?.gameplay || {};
+        const act = st?.action || {};
+        const dot = $('consoleDot');
+        if (c) {
+            dot.className = 'dot ' + (c.in_game ? 'online' : (c.socket_connected ? 'joining' : ''));
+            $('consoleConnectBtn').disabled = false;
+            $('consoleStopBtn').disabled = !c.in_game;
+        } else {
+            dot.className = 'dot';
+            $('consoleConnectBtn').disabled = true;
+            $('consoleStopBtn').disabled = true;
+        }
+        $('consoleHealth').textContent = `health: ${gm.health ?? '-'}/20`;
+        $('consoleHunger').textContent = `hunger: ${gm.hunger ?? '-'}/20`;
+        $('consolePos').textContent = gm.position ? `pos: x${gm.position.x}, y${gm.position.y}, z${gm.position.z}` : 'pos: -';
+        $('consoleAction').textContent = `action: ${act.current ?? '-'}`;
+        $('consoleBiome').textContent = `biome: ${gm.biome ?? '-'}`;
+    }
+
+    $('consoleConnectBtn').addEventListener('click', () => socket.emit('start-agent', 'Console'));
+    $('consoleStopBtn').addEventListener('click', () => socket.emit('stop-agent', 'Console'));
+    $('consoleRestartBtn').addEventListener('click', () => socket.emit('restart-agent', 'Console'));
+    $('consoleRecreateBtn').addEventListener('click', async () => {
+        try {
+            const res = await fetch('/api/console-profile');
+            const profile = await res.json();
+            const settings = {
+                profile,
+                minecraft_version: 'auto',
+                host: $('fleet-host').value.trim() || '127.0.0.1',
+                port: Number($('fleet-port').value) || -1,
+                auth: $('fleet-auth').value,
+                base_profile: 'survival',
+                load_memory: true,
+                init_message: 'Hello! Introduce yourself to the server.',
+                only_chat_with: [],
+                render_bot_view: false,
+                allow_vision: false,
+                chat_ingame: true,
+                show_command_syntax: 'shortened',
+                narrate_behavior: true,
+                spawn_timeout: 60,
+            };
+            socket.emit('create-agent', settings, res2 => {
+                if (res2.success) toast('Console recreated.', 'ok');
+                else toast(res2.error || 'Failed', 'error');
+            });
+        } catch (e) {
+            toast('Could not load Console profile: ' + e, 'error');
+        }
+    });
+
+    // ==================== ALL AGENTS ====================
+    $('stopAllAgentsBtn').addEventListener('click', () => socket.emit('stop-all-agents'));
+    $('fullShutdownBtn').addEventListener('click', () => {
+        if (confirm('Full shutdown? This stops everything and closes the server.')) socket.emit('shutdown');
+    });
+
+    let lastAgentsSig = '';
+    function agentsRosterSig(agents) {
+        return agents.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${a.fleet}|${agentSettings[a.name]?.render_bot_view}`).join('§');
+    }
+
+    function agentCardHTML(a) {
+        const canView = agentSettings[a.name]?.render_bot_view === true && a.in_game;
+        const dotClass = a.in_game ? 'online' : (a.socket_connected ? 'joining' : '');
+        return `
+            <div class="agent-card" id="agent-${a.name}">
+                <div class="agent-head">
+                    <span class="dot ${dotClass}" id="ag-${a.name}-dot"></span>
+                    <span class="agent-name">${escapeHtml(a.name)}</span>
+                    ${a.fleet ? '<span class="tag">fleet</span>' : ''}
+                </div>
+                <div class="agent-body">
+                    ${canView ? `<div class="viewer-wrap"><iframe class="viewer-frame" id="ag-${a.name}-view" src="http://localhost:${a.viewerPort}"></iframe></div>` : ''}
+                    <div class="stats-grid">
+                        <div class="stat">⚔ <b id="ag-${a.name}-health">-</b></div>
+                        <div class="stat">🍖 <b id="ag-${a.name}-hunger">-</b></div>
+                        <div class="stat">📍 <span id="ag-${a.name}-pos">-</span></div>
+                        <div class="stat">🌍 <b id="ag-${a.name}-biome">-</b></div>
+                        <div class="stat" style="grid-column:1/-1;">⚙ <b id="ag-${a.name}-action">...</b></div>
+                    </div>
+                    <div class="msg-line" id="ag-${a.name}-msg">“”</div>
+                    <div class="tpa-box">
+                        <div class="tpa-title">Teleport (instant, no AI)</div>
+                        <div class="tpa-actions">
+                            <button class="btn btn-teal btn-small" onclick="tpaPlayer('${a.name}')">tpa</button>
+                            <button class="btn btn-teal btn-small" onclick="tpaHere('${a.name}')">tpahere</button>
+                            <button class="btn btn-green btn-small" onclick="execCmd('${a.name}','/tpaccept')">accept</button>
+                            <button class="btn btn-danger btn-small" onclick="execCmd('${a.name}','/tpdeny')">deny</button>
+                            <button class="btn btn-purple btn-small" onclick="execCmd('${a.name}','/tpauto')">auto</button>
+                            <button class="btn btn-small" onclick="execCmd('${a.name}','/tpcancel')">cancel</button>
+                        </div>
+                    </div>
+                    <div class="agent-actions">
+                        <button class="btn btn-small" onclick="msgModal('${a.name}')">Chat</button>
+                        <button class="btn btn-small" onclick="socket.emit('restart-agent','${a.name}')">Restart</button>
+                        ${a.in_game
+                            ? `<button class="btn btn-small btn-danger" onclick="socket.emit('stop-agent','${a.name}')">Disconnect</button>`
+                            : `<button class="btn btn-small btn-green" ${a.socket_connected ? 'disabled' : ''} onclick="socket.emit('start-agent','${a.name}')">Connect</button>`}
+                        <button class="btn btn-small btn-danger" onclick="socket.emit('destroy-agent','${a.name}')">Remove</button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function renderAgentsGrid() {
+        const grid = $('agentsGrid');
+        if (currentAgents.length === 0) {
+            lastAgentsSig = '';
+            grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">🤖</div>No agents running.</div>';
+            return;
+        }
+        const sig = agentsRosterSig(currentAgents);
+        if (grid.dataset.rendered !== '1' || sig !== lastAgentsSig) {
+            lastAgentsSig = sig;
+            grid.dataset.rendered = '1';
+            grid.innerHTML = currentAgents.map(agentCardHTML).join('');
+        }
+        updateAgentsLive();
+    }
+
+    function updateAgentsLive() {
+        currentAgents.forEach(a => {
+            const st = lastStates[a.name];
+            const gm = st?.gameplay || {};
+            const act = st?.action || {};
+            const set = (key, val) => { const el = $(`ag-${a.name}-${key}`); if (el) el.textContent = val; };
+            set('health', (gm.health ?? '-') + '/20');
+            set('hunger', (gm.hunger ?? '-') + '/20');
+            set('pos', gm.position ? `x${gm.position.x}, y${gm.position.y}, z${gm.position.z}` : '-');
+            set('biome', gm.biome ?? '-');
+            set('action', act.current ?? '...');
+            const msgEl = $(`ag-${a.name}-msg`);
+            if (msgEl) msgEl.textContent = '“' + (lastMessages[a.name] || '') + '”';
+        });
+    }
+
+    window.msgModal = (name) => {
+        const m = prompt(`Message to ${name}:`, '');
+        if (m && m.trim()) socket.emit('send-message', name, { from: masterName(), message: m.trim() });
+    };
+
+    // ==================== SOCKET HANDLERS ====================
+    socket.on('agents-status', async (agents) => {
+        currentAgents = agents;
+        agents.forEach(a => { if (a.fleet) fleetNames.add(a.name); });
+
+        const needSettings = agents.filter(a => !agentSettings[a.name]);
+        if (needSettings.length) {
+            await Promise.all(needSettings.map(async a => {
+                const s = await fetchAgentSettings(a.name);
+                if (s) agentSettings[a.name] = s;
+            }));
+        }
+        renderFleetGrid();
+        renderConsole();
+        renderAgentsGrid();
+    });
+
+    socket.on('state-update', (states) => {
+        lastStates = states || {};
+        renderFleetGrid();
+        renderConsole();
+        renderAgentsGrid();
+    });
+
+    socket.on('bot-output', (agentName, message) => {
+        lastMessages[agentName] = message;
+        if (agentName === 'Console') {
+            addChatMsg('bot', 'Console', message);
+        }
+        renderFleetGrid();
+        renderAgentsGrid();
+    });
+
+    // keep global for inline handlers
+    window.socket = socket;
+</script>
+</body>
+</html>

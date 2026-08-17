@@ -1,0 +1,28 @@
+[
+  {
+    "type": "player",
+    "data": {
+      "name": "nikolakonst",
+      "lastPosition": "(8, 68, -4)",
+      "lastDistance": 1
+    },
+    "meta": {
+      "player": "nikolakonst"
+    },
+    "ts": 1782063423424,
+    "hits": 0
+  },
+  {
+    "type": "player",
+    "data": {
+      "name": "RocketLeagueGent",
+      "lastPosition": "(-1, 68, -4)",
+      "lastDistance": 2
+    },
+    "meta": {
+      "player": "RocketLeagueGent"
+    },
+    "ts": 1783349723950,
+    "hits": 0
+  }
+]

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "mqo20z834j2",
+    "fact": "action_explore_fail",
+    "source": "self",
+    "confidence": 0.1,
+    "label": "low",
+    "ts": 1783459839763,
+    "verified": 0,
+    "rejected": 0
+  },
+  {
+    "id": "mqo2fif87ns",
+    "fact": "action_move_to_fail",
+    "source": "self",
+    "confidence": 0.3,
+    "label": "low",
+    "ts": 1782063222020,
+    "verified": 0,
+    "rejected": 0
+  },
+  {
+    "id": "mqo2ggzjdpm",
+    "fact": "action_chat_success",
+    "source": "self",
+    "confidence": 0.6,
+    "label": "medium",
+    "ts": 1782063266815,
+    "verified": 0,
+    "rejected": 0
+  },
+  {
+    "id": "mqo2grwjpwe",
+    "fact": "action_wait_success",
+    "source": "self",
+    "confidence": 0.7000000000000001,
+    "label": "medium",
+    "ts": 1782063308703,
+    "verified": 2,
+    "rejected": 0
+  }
+]
