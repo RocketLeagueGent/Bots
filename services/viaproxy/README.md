@@ -1,41 +1,46 @@
-Use this service to connect your bot to an unsupported minecraft server versions.
+# ViaProxy - Protocol Translator
 
-Run:
+Translate between Minecraft protocol versions so mineflayer bots can connect to servers they don't natively support (e.g. 26.2).
 
-```bash
-docker-compose --profile viaproxy up
+## How it works
+
+```
+mineflayer (protocol 775) --> ViaProxy (localhost:25568) --> 26.2 Server (protocol 776)
 ```
 
-After first start it will create config file `services/viaproxy/viaproxy.yml`.
+ViaProxy sits between the bots and the server, translating packets in real time.
 
-Edit this file, and change your desired target `target-address`, 
+## Quick start (no Docker required)
 
-then point your `settings.js` `host` and `port` to viaproxy endpoint:
+1. Install Java 17+ (you already have Java 25)
+2. Run `services/viaproxy/start.bat`
+3. Point `settings.js` to ViaProxy:
 
 ```javascript
-    "host": "host.docker.internal",
+    "host": "localhost",
     "port": 25568,
 ```
 
-This easily works with "offline" servers. 
+4. Run `npm start` as usual
 
-Connecting to "online" servers via viaproxy involves more effort:\
-First start the ViaProxy container, then open another terminal in the mindcraft directory.\
-Run `docker attach mindcraft-viaproxy-1` in the new terminal to attach to the container.\
-After attaching, you can use the `account` command to manage user accounts:
- - `account list` List all accounts in the list
- - `account add microsoft` Add a microsoft account (run the command and follow the instructions)
- - `account select <id>` Select the account to be used (run `account list` to see the ids)
- - `account remove <id>` Remove an account (run `account list` to see the ids)
- - `account deselect` Deselect the current account (go back to offline mode)
+## Configuration
 
-> [!WARNING]
-> If you login with a microsoft account, the access token is stored in the `saves.json` file.\
-> Never share this file with anyone! This would allow them to join servers in your name!
+Edit `services/viaproxy/viaproxy.yml`:
 
-When you're done setting up your account (don't forget to select it), use `CTRL-P` then `CTRL-Q` to detach from the container.
+- `target-address` — the real server address (default: `VanillaSMP_S2.aternos.me:19523`)
+- `bind-address` — local port ViaProxy listens on (default: `0.0.0.0:25568`)
+- `target-version` — `Auto Detect (1.7+ servers)` works for most cases
 
-If you want to persist these changes, you can configure them in the `services/viaproxy/viaproxy.yml`.
-1. Change `auth-method` to `account`
-2. Change `minecraft-account-index` to the id of your account
+## Online mode servers
 
+ViaProxy supports Microsoft account authentication:
+
+1. Start ViaProxy with the GUI: `java -jar ViaProxy-3.4.13-SNAPSHOT.jar`
+2. Add your Microsoft account in the Accounts tab
+3. Set `auth-method: account` in `viaproxy.yml`
+
+## Files
+
+- `ViaProxy-3.4.13-SNAPSHOT.jar` — dev build with 26.2 support (Aug 2026)
+- `viaproxy.yml` — configuration
+- `start.bat` — Windows startup script

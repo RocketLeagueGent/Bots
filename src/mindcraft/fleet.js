@@ -52,16 +52,17 @@ export function pickPersonalityFlavor() {
     return PERSONALITY_FLAVORS[Math.floor(Math.random() * PERSONALITY_FLAVORS.length)];
 }
 
-// Free OpenRouter models (all verified working with the fleet prompt).
-// Spreading the fleet across several free models avoids per-model rate limits.
+// Free OpenRouter models + Cloud API. Spreading the fleet across several
+// providers avoids per-model and per-account rate limits.
 const FLEET_MODELS = [
-    'nvidia/nemotron-3-super-120b-a12b:free',
-    'nvidia/nemotron-3-nano-30b-a3b:free',
-    'nvidia/nemotron-3.5-lightning:free',
-    'google/gemma-4-26b-a4b-it:free',
-    'dots-studio/dots-3-note-preview:free',
-    'poolside/laguna-s-2.1:free',
-    'liquid/lfm-2.5-2.6b:free'
+    { api: 'openrouter', model: 'nvidia/nemotron-3-super-120b-a12b:free' },
+    { api: 'openrouter', model: 'nvidia/nemotron-3-nano-30b-a3b:free' },
+    { api: 'openrouter', model: 'nvidia/nemotron-3.5-lightning:free' },
+    { api: 'openrouter', model: 'google/gemma-4-26b-a4b-it:free' },
+    { api: 'openrouter', model: 'dots-studio/dots-3-note-preview:free' },
+    { api: 'openrouter', model: 'poolside/laguna-s-2.1:free' },
+    { api: 'openrouter', model: 'liquid/lfm-2.5-2.6b:free' },
+    { api: 'cloud', model: null },
 ];
 
 export function pickFleetModel() {
@@ -72,15 +73,19 @@ export function pickFleetModel() {
 // randomized personality flavor, but they all obey the master player.
 export function buildFleetProfile(username, masterName, flavor = null) {
     const personality = flavor || pickPersonalityFlavor();
+    const fleetModel = pickFleetModel();
+    const modelConfig = {
+        "api": fleetModel.api,
+        "model": fleetModel.model,
+    };
+    if (fleetModel.api === 'openrouter') {
+        modelConfig.url = 'https://openrouter.ai/api/v1';
+    }
     return {
         "name": username,
         "master_name": masterName,
         "fleet_names": [],
-        "model": {
-            "api": "openrouter",
-            "model": pickFleetModel(),
-            "url": "https://openrouter.ai/api/v1"
-        },
+        "model": modelConfig,
         "embedding": {
             "api": "openai",
             "url": "https://models.inference.ai.azure.com",
