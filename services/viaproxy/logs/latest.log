@@ -1,15 +1,36 @@
-[13:39:11] [main/INFO] (ViaProxy) Initializing ViaProxy GUI v3.4.13-SNAPSHOT (git-ViaProxy-3.4.13-SNAPSHOT:552dc5e) (Injected using Launcher Agent)...
-[13:39:11] [main/INFO] (ViaProxy) Using java version: OpenJDK 64-Bit Server VM 25.0.4 (Eclipse Adoptium) on Windows 11
-[13:39:11] [main/INFO] (ViaProxy) Available memory (bytes): 2103443456
-[13:39:11] [main/INFO] (ViaProxy) Working directory: C:\Users\pana\Desktop\Bots\services\viaproxy
-[13:39:13] [Via-Mappingloader-1/INFO] (ViaVersion) Loading block connection mappings ...
-[13:39:14] [main/INFO] (ViaBackwards) Loading translations...
-[13:39:14] [main/INFO] (ViaBackwards) Registering protocols...
-[13:39:14] [main/INFO] (ViaRewind) Registering protocols...
-[13:39:15] [main/INFO] (ViaBedrock) Started resource pack HTTP server on http://127.0.0.1:58395/
-[13:39:15] [main/INFO] (ViaVersion) ViaVersion detected lowest supported version by the proxy: 1.7.2-1.7.5 (4)
-[13:39:15] [main/INFO] (ViaVersion) Highest supported version by the proxy: 26.2 (776)
-[13:39:16] [Via Async Task 1/INFO] (ViaVersion) You are running a development version of the plugin, please report any bugs to GitHub.
-[13:39:18] [Via Async Scheduler 0/INFO] (ViaVersion) Finished mapping loading, shutting down loader executor.
-[13:39:18] [main/INFO] (ViaProxy) ViaProxy started successfully!
-[13:39:19] [ForkJoinPool.commonPool-worker-1/WARN] (ViaProxy) You are running a dev version of ViaProxy
+[15:33:16] [main/INFO] (ViaProxy) Initializing ViaProxy GUI v3.4.13-SNAPSHOT (git-ViaProxy-3.4.13-SNAPSHOT:552dc5e) (Injected using Launcher Agent)...
+[15:33:16] [main/INFO] (ViaProxy) Using java version: OpenJDK 64-Bit Server VM 25.0.4 (Eclipse Adoptium) on Windows 11
+[15:33:16] [main/INFO] (ViaProxy) Available memory (bytes): 2103443456
+[15:33:16] [main/INFO] (ViaProxy) Working directory: C:\Users\pana\Desktop\Bots\services\viaproxy
+[15:33:23] [Via-Mappingloader-1/INFO] (ViaVersion) Loading block connection mappings ...
+[15:33:26] [main/INFO] (ViaBackwards) Loading translations...
+[15:33:26] [main/INFO] (ViaBackwards) Registering protocols...
+[15:33:27] [main/INFO] (ViaRewind) Registering protocols...
+[15:33:33] [main/INFO] (ViaBedrock) Started resource pack HTTP server on http://127.0.0.1:51223/
+[15:33:33] [main/INFO] (ViaVersion) ViaVersion detected lowest supported version by the proxy: 1.7.2-1.7.5 (4)
+[15:33:33] [main/INFO] (ViaVersion) Highest supported version by the proxy: 26.2 (776)
+[15:33:36] [Via Async Task 1/INFO] (ViaVersion) You are running a development version of the plugin, please report any bugs to GitHub.
+[15:33:40] [Via Async Scheduler 0/INFO] (ViaVersion) Finished mapping loading, shutting down loader executor.
+[15:33:42] [main/INFO] (ViaProxy) ViaProxy started successfully!
+[15:33:43] [ForkJoinPool.commonPool-worker-1/WARN] (ViaProxy) You are running a dev version of ViaProxy
+[15:35:11] [Thread-2/INFO] (ViaProxy) Starting proxy server
+[15:35:11] [Thread-2/INFO] (ViaProxy) Binding proxy server to 0.0.0.0:25568
+[15:35:43] [AWT-EventQueue-0/INFO] (ViaProxy) Stopping proxy server
+[15:35:47] [Thread-3/INFO] (ViaProxy) Starting proxy server
+[15:35:47] [Thread-3/INFO] (ViaProxy) Binding proxy server to 0.0.0.0:25568
+[15:36:11] [AWT-EventQueue-0/INFO] (ViaProxy) Stopping proxy server
+[15:36:24] [Thread-4/INFO] (ViaProxy) Starting proxy server
+[15:36:24] [Thread-4/INFO] (ViaProxy) Binding proxy server to 0.0.0.0:25568
+[15:36:46] [AWT-EventQueue-0/INFO] (ViaProxy) Stopping proxy server
+[15:36:54] [Thread-5/ERROR] (ViaProxy) Error while starting ViaProxy
+java.lang.IllegalArgumentException: Invalid bind address!
+	at net.raphimc.viaproxy.ui.impl.GeneralTab.lambda$start$7(GeneralTab.java:286)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+[15:37:18] [Thread-6/ERROR] (ViaProxy) Error while starting ViaProxy
+java.lang.IllegalArgumentException: Invalid bind address!
+	at net.raphimc.viaproxy.ui.impl.GeneralTab.lambda$start$7(GeneralTab.java:286)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+[15:37:25] [Thread-7/ERROR] (ViaProxy) Error while starting ViaProxy
+java.lang.IllegalArgumentException: Invalid bind address!
+	at net.raphimc.viaproxy.ui.impl.GeneralTab.lambda$start$7(GeneralTab.java:286)
+	at java.base/java.lang.Thread.run(Thread.java:1474)

@@ -1,1 +1,1 @@
-{"accountsV4":[],"ui":{}}
+{"accountsV4":[{"name":"Doger","uuid":"4a7c1716-410b-34ce-82a9-d92c5127ca43","accountType":"net.raphimc.viaproxy.saves.impl.accounts.OfflineAccount"}],"ui":{"proxy":"","legacy_skin_loading":"false","server_address":"mc.jerots.me","notice.ban_warning":"true","bind_address":"0.0.0.0:25568"}}

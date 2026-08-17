@@ -4,540 +4,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Minebotter — Command Center</title>
+    <title>MindCraft — Command Center</title>
     <script src="/socket.io/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg: #0a0c10;
-            --panel: #12151d;
-            --panel2: #1a1f2b;
-            --panel3: #222838;
-            --border: #2a3142;
-            --text: #e3e9f5;
-            --muted: #8a94a8;
-            --green: #35d07f;
-            --red: #f2545b;
-            --blue: #4aa8ff;
-            --yellow: #f4c542;
-            --purple: #a06bff;
-            --teal: #35c8d0;
+            --bg: #09090b;
+            --surface: #111113;
+            --surface2: #18181b;
+            --surface3: #1f1f23;
+            --border: #27272a;
+            --text: #fafafa;
+            --text2: #a1a1aa;
+            --text3: #71717a;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --blue: #3b82f6;
+            --purple: #8b5cf6;
+            --teal: #14b8a6;
         }
 
-        html,
-        body {
-            margin: 0;
-            padding: 0;
+        html, body {
             background: var(--bg);
             color: var(--text);
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* ── topbar ── */
         .topbar {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 12px 22px;
-            background: linear-gradient(90deg, #0e1118, #141a28);
+            gap: 16px;
+            padding: 0 24px;
+            height: 48px;
+            background: var(--surface);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 50;
-            flex-wrap: wrap;
         }
-
         .brand {
-            font-size: 1.4rem;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            color: #fff;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: -.02em;
+            color: var(--text);
         }
-
-        .brand span {
-            color: var(--purple);
-        }
-
+        .brand span { color: var(--purple); }
         .status-badge {
-            font-size: .72rem;
-            padding: 3px 10px;
-            border-radius: 12px;
-            background: #222833;
-            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: var(--surface2);
+            color: var(--text3);
+            border: 1px solid var(--border);
         }
-
         .status-badge.online {
             color: var(--green);
-            box-shadow: 0 0 8px rgba(53, 208, 127, .25);
+            border-color: #22c55e33;
+            background: #22c55e0d;
         }
-
-        .status-badge.offline {
-            color: var(--red);
-        }
-
-        .spacer {
-            flex: 1;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 4px;
-        }
-
+        .status-badge.offline { color: var(--red); }
+        .spacer { flex: 1; }
+        .tabs { display: flex; gap: 2px; }
         .tab-btn {
             background: transparent;
-            color: var(--muted);
+            color: var(--text3);
             border: none;
             cursor: pointer;
-            padding: 8px 18px;
-            font-size: .95rem;
-            border-radius: 8px 8px 0 0;
-            font-weight: 700;
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 6px;
+            font-family: inherit;
+            transition: color .15s, background .15s;
         }
+        .tab-btn:hover { color: var(--text2); background: var(--surface2); }
+        .tab-btn.active { color: var(--text); background: var(--surface2); }
 
-        .tab-btn:hover {
-            color: var(--text);
-            background: rgba(255, 255, 255, .05);
-        }
+        /* ── tabs ── */
+        .tab-content { display: none; padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+        .tab-content.active { display: block; }
 
-        .tab-btn.active {
-            color: #fff;
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-bottom: none;
-        }
-
-        .tab-content {
-            display: none;
-            padding: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
+        /* ── card ── */
         .card {
-            background: var(--panel);
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 18px;
-            margin-bottom: 16px;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
         }
-
         .card h2 {
-            margin: 0 0 14px 0;
-            font-size: 1.05rem;
-            color: #fff;
+            margin: 0 0 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        .card h2 .sub {
-            font-size: .7rem;
-            color: var(--muted);
-            font-weight: 400;
-        }
-
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-end;
-        }
-
-        .field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .field label {
-            font-size: .7rem;
-            color: var(--muted);
             text-transform: uppercase;
-            letter-spacing: .6px;
+            letter-spacing: .04em;
+        }
+        .card h2 .sub {
+            font-size: 12px;
+            color: var(--text3);
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
-        .field input,
-        .field select {
-            background: var(--panel2);
+        /* ── layout ── */
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        .field label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+        .field input, .field select {
+            background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 8px;
-            padding: 8px 10px;
-            font-size: .9rem;
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-size: 13px;
             min-width: 120px;
+            font-family: 'JetBrains Mono', monospace;
+            transition: border-color .15s;
         }
-
-        .field input:focus,
-        .field select:focus {
+        .field input:focus, .field select:focus {
             outline: none;
             border-color: var(--blue);
         }
+        .field .chk { min-width: auto; width: auto; }
 
-        .field .chk {
-            min-width: auto;
-            width: auto;
-        }
-
+        /* ── buttons ── */
         .btn {
-            background: var(--panel3);
-            color: var(--text);
+            background: var(--surface2);
+            color: var(--text2);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 14px;
+            border-radius: 6px;
+            padding: 7px 14px;
             cursor: pointer;
-            font-size: .84rem;
+            font-size: 12px;
             font-weight: 600;
-            transition: all .12s;
+            font-family: 'JetBrains Mono', monospace;
+            transition: all .15s;
             white-space: nowrap;
         }
+        .btn:hover { color: var(--text); border-color: #3f3f46; background: var(--surface3); }
+        .btn:active { transform: scale(.98); }
+        .btn:disabled { opacity: .3; cursor: not-allowed; }
+        .btn-primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+        .btn-primary:hover { background: #2563eb; border-color: #2563eb; }
+        .btn-danger { background: var(--red); border-color: var(--red); color: #fff; }
+        .btn-danger:hover { background: #dc2626; border-color: #dc2626; }
+        .btn-green { background: var(--green); border-color: var(--green); color: #000; }
+        .btn-green:hover { background: #16a34a; border-color: #16a34a; }
+        .btn-teal { background: var(--teal); border-color: var(--teal); color: #000; }
+        .btn-teal:hover { background: #0d9488; border-color: #0d9488; }
+        .btn-purple { background: var(--purple); border-color: var(--purple); color: #fff; }
+        .btn-purple:hover { background: #7c3aed; border-color: #7c3aed; }
+        .btn-ghost { background: transparent; }
+        .btn-small { padding: 4px 10px; font-size: 11px; }
 
-        .btn:hover {
-            border-color: var(--blue);
-            filter: brightness(1.15);
-        }
+        /* ── grid ── */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
 
-        .btn:disabled {
-            opacity: .4;
-            cursor: not-allowed;
-            filter: none;
-        }
-
-        .btn-primary {
-            background: linear-gradient(90deg, #3d6bff, #7a4bff);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: linear-gradient(90deg, #c0392b, #e74c3c);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-green {
-            background: linear-gradient(90deg, #1fa65a, #35d07f);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-teal {
-            background: linear-gradient(90deg, #1e8f96, #35c8d0);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-purple {
-            background: linear-gradient(90deg, #5a3bd0, #a06bff);
-            border: none;
-            color: #fff;
-        }
-
-        .btn-ghost {
-            background: transparent;
-        }
-
-        .btn-small {
-            padding: 4px 10px;
-            font-size: .75rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 14px;
-        }
-
+        /* ── agent card ── */
         .agent-card {
-            background: var(--panel);
+            background: var(--surface);
             border: 1px solid var(--border);
-            border-radius: 14px;
+            border-radius: 10px;
             overflow: hidden;
+            transition: border-color .2s;
         }
-
+        .agent-card:hover { border-color: #3f3f46; }
+        .agent-card.card-online { border-top: 2px solid var(--green); }
         .agent-head {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 14px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border);
-            background: var(--panel2);
         }
-
         .dot {
-            width: 9px;
-            height: 9px;
+            width: 7px; height: 7px;
             border-radius: 50%;
             background: var(--red);
             flex-shrink: 0;
         }
-
         .dot.online {
             background: var(--green);
-            box-shadow: 0 0 7px var(--green);
+            box-shadow: 0 0 6px var(--green);
+            animation: pulse 2s ease-in-out infinite;
         }
-
-        .dot.joining {
-            background: var(--yellow);
+        .dot.joining { background: var(--amber); }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 4px var(--green); }
+            50% { box-shadow: 0 0 10px var(--green); }
         }
-
         .agent-name {
-            font-weight: 800;
-            color: #fff;
-            font-size: .93rem;
-        }
-
-        .tag {
-            font-size: .6rem;
-            background: var(--purple);
-            color: #fff;
-            border-radius: 8px;
-            padding: 2px 8px;
-            letter-spacing: .6px;
-        }
-
-        .agent-body {
-            padding: 12px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-
-        .stat {
-            background: var(--panel2);
-            border-radius: 8px;
-            padding: 6px 8px;
-            font-size: .75rem;
-            color: var(--muted);
-        }
-
-        .stat b {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
             color: var(--text);
-            font-weight: 600;
+            font-size: 13px;
         }
-
+        .tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
+            font-weight: 700;
+            background: var(--surface3);
+            color: var(--text3);
+            border-radius: 3px;
+            padding: 2px 6px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            border: 1px solid var(--border);
+        }
+        .agent-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+        .stat {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--surface2);
+            border-radius: 4px;
+            padding: 5px 8px;
+            font-size: 11px;
+            color: var(--text3);
+            border: 1px solid var(--border);
+        }
+        .stat b { color: var(--text2); font-weight: 600; }
         .msg-line {
-            font-size: .74rem;
-            color: var(--muted);
+            font-size: 12px;
+            color: var(--text3);
             font-style: italic;
             min-height: 16px;
             word-break: break-word;
         }
+        .agent-actions { display: flex; flex-wrap: wrap; gap: 4px; }
 
-        .agent-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
+        /* ── tpa box ── */
         .tpa-box {
-            background: var(--panel2);
+            background: var(--surface2);
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 6px;
             padding: 8px;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-
         .tpa-box .tpa-title {
-            font-size: .68rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 9px;
             color: var(--teal);
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .6px;
+            letter-spacing: .08em;
         }
+        .tpa-actions { display: flex; flex-wrap: wrap; gap: 4px; }
 
-        .tpa-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
+        /* ── viewer ── */
+        .viewer-frame { width: 100%; height: 180px; border: none; border-radius: 6px; background: #000; display: block; }
+        .viewer-wrap { position: relative; border-radius: 6px; overflow: hidden; }
 
-        .viewer-frame {
-            width: 100%;
-            height: 200px;
-            border: none;
-            border-radius: 8px;
-            background: #000;
-            display: block;
-        }
-
-        .viewer-wrap {
-            position: relative;
-        }
-
-        .viewer-off {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--muted);
-            font-size: .8rem;
-        }
-
+        /* ── chat ── */
         .chat-window {
-            height: 420px;
+            height: 400px;
             overflow-y: auto;
-            background: var(--panel2);
+            background: var(--surface2);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 14px;
+            border-radius: 8px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 6px;
         }
-
         .chat-msg {
-            max-width: 80%;
+            max-width: 75%;
             padding: 8px 12px;
-            border-radius: 12px;
-            font-size: .88rem;
-            line-height: 1.4;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.45;
         }
-
         .chat-msg .who {
-            font-size: .68rem;
-            color: var(--muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text3);
             margin-bottom: 2px;
+            font-weight: 600;
+            text-transform: uppercase;
         }
-
         .chat-msg.bot {
-            background: #1f2740;
+            background: var(--surface3);
             align-self: flex-start;
-            border-top-left-radius: 3px;
+            border: 1px solid var(--border);
         }
-
         .chat-msg.me {
-            background: #20352a;
+            background: #1e3a5f;
             align-self: flex-end;
-            border-top-right-radius: 3px;
+            border: 1px solid #1e3a5f;
         }
-
-        .chat-input-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
+        .chat-input-row { display: flex; gap: 8px; margin-top: 10px; }
         .chat-input-row input {
             flex: 1;
-            background: var(--panel2);
+            background: var(--surface2);
             border: 1px solid var(--border);
             color: var(--text);
-            border-radius: 10px;
-            padding: 12px 14px;
-            font-size: .95rem;
-        }
-
-        .chat-input-row input:focus {
-            outline: none;
-            border-color: var(--blue);
-        }
-
-        .log {
-            background: var(--panel2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: .8rem;
-            color: var(--muted);
-            max-height: 180px;
-            overflow-y: auto;
-            font-family: Consolas, monospace;
-        }
-
-        .log .err {
-            color: var(--red);
-        }
-
-        .log .ok {
-            color: var(--green);
-        }
-
-        .divider {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 16px 0;
-        }
-
-        .toast-wrap {
-            position: fixed;
-            bottom: 18px;
-            right: 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        .toast {
-            background: var(--panel3);
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--blue);
-            padding: 10px 14px;
             border-radius: 8px;
-            font-size: .82rem;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+            padding: 10px 12px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .chat-input-row input:focus { outline: none; border-color: var(--blue); }
+
+        /* ── log ── */
+        .log {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text3);
+            max-height: 160px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+        .log .err { color: var(--red); }
+        .log .ok { color: var(--green); }
+
+        .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+        /* ── toasts ── */
+        .toast-wrap { position: fixed; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 6px; z-index: 100; }
+        .toast {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--blue);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            box-shadow: 0 4px 12px rgba(0,0,0,.4);
             animation: slideIn .2s ease;
         }
-
-        .toast.error {
-            border-left-color: var(--red);
-        }
-
-        .toast.ok {
-            border-left-color: var(--green);
-        }
-
+        .toast.error { border-left-color: var(--red); }
+        .toast.ok { border-left-color: var(--green); }
         @keyframes slideIn {
-            from {
-                transform: translateX(30px);
-                opacity: 0;
-            }
-
-            to {
-                transform: none;
-                opacity: 1;
-            }
+            from { transform: translateX(16px); opacity: 0; }
+            to { transform: none; opacity: 1; }
         }
 
-        .empty-state {
-            text-align: center;
-            color: var(--muted);
-            padding: 40px 0;
-        }
+        .empty-state { text-align: center; color: var(--text3); padding: 40px 0; font-size: 13px; }
+        .empty-state .big { font-size: 28px; margin-bottom: 8px; opacity: .5; }
+        .hint { font-size: 11px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
 
-        .empty-state .big {
-            font-size: 2.2rem;
-            margin-bottom: 8px;
-        }
-
-        .hint {
-            font-size: .72rem;
-            color: var(--muted);
-            margin-top: 8px;
-        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     </style>
 </head>
 
 <body>
 
     <div class="topbar">
-        <div class="brand">Mine<span>Botter</span></div>
+        <div class="brand">Mind<span>Craft</span></div>
         <span id="msStatus" class="status-badge offline">mindserver offline</span>
         <div class="spacer"></div>
         <div class="tabs">
@@ -551,7 +394,7 @@
     <div id="tab-fleet" class="tab-content active">
 
         <div class="card">
-            <h2>Deploy Fleet <span class="sub">— random usernames, offline auth, auto register/login</span></h2>
+            <h2>Deploy Fleet <span class="sub">random usernames, offline auth, auto register/login</span></h2>
             <div class="row">
                 <div class="field">
                     <label>Server Host</label>
@@ -586,54 +429,49 @@
                 </div>
                 <button id="spawnFleetBtn" class="btn btn-primary">DEPLOY FLEET</button>
             </div>
-            <div class="row" style="margin-top:12px; align-items:center;">
-                <span style="font-size:.78rem; color:var(--muted);">Quick presets:</span>
+            <div class="row" style="margin-top:10px; align-items:center;">
+                <span style="font-size:11px; color:var(--text3); font-family:'JetBrains Mono',monospace;">PRESETS</span>
                 <button class="btn btn-small" onclick="setFleetCount(10)">10</button>
                 <button class="btn btn-small" onclick="setFleetCount(50)">50</button>
                 <button class="btn btn-small" onclick="setFleetCount(198)">198</button>
-                <button class="btn btn-small" onclick="setFleetCount(200)">Max 200</button>
+                <button class="btn btn-small" onclick="setFleetCount(200)">MAX</button>
             </div>
-            <div class="hint">Each bot gets a random username and its own personality. Bots only take orders from the
-                master and this dashboard. Start the Aternos server BEFORE deploying. Keep Perspectives OFF for big
-                fleets (one GPU viewer per bot).</div>
+            <div class="hint">Each bot gets a random username and personality. Only takes orders from master + dashboard. Start Aternos BEFORE deploying. Keep Perspectives OFF for big fleets.</div>
         </div>
 
         <div class="card">
             <h2>Fleet Command</h2>
             <div class="row">
                 <div class="field" style="flex:1;">
-                    <label>Broadcast message / order (as master)</label>
-                    <input id="fleet-broadcast" placeholder="e.g. follow me / attack JohnMinecraft123 / mine 10 oak_log"
-                        spellcheck="false">
+                    <label>Broadcast message / order</label>
+                    <input id="fleet-broadcast" placeholder="e.g. follow me / attack John123 / mine 10 oak_log" spellcheck="false">
                 </div>
-                <button id="broadcastBtn" class="btn btn-green">Send to all</button>
-                <button id="toggleViewsBtn" class="btn btn-purple">Perspectives: ON</button>
-                <button id="destroyFleetBtn" class="btn btn-danger">Remove ALL fleet</button>
+                <button id="broadcastBtn" class="btn btn-green">SEND</button>
+                <button id="toggleViewsBtn" class="btn btn-purple">PERSPECTIVES: ON</button>
+                <button id="destroyFleetBtn" class="btn btn-danger">REMOVE ALL</button>
             </div>
         </div>
 
         <div class="card">
-            <h2>Fleet TPA <span class="sub">— teleport commands sent to every bot at once</span></h2>
+            <h2>Fleet TPA <span class="sub">teleport commands, zero AI cost</span></h2>
             <div class="row">
                 <div class="field">
-                    <label>TPA target (player)</label>
+                    <label>Target player</label>
                     <input id="fleet-tpa-target" value="RocketLeagueGent" spellcheck="false">
                 </div>
-                <button class="btn btn-teal" id="fleetTpaBtn">/tpa target</button>
-                <button class="btn btn-teal" id="fleetTpaHereBtn">/tpahere target</button>
-                <button class="btn btn-green" id="fleetTpAcceptBtn">/tpaccept all</button>
-                <button class="btn btn-danger" id="fleetTpDenyBtn">/tpdeny all</button>
-                <button class="btn btn-purple" id="fleetTpAutoBtn">/tpauto all</button>
-                <button class="btn btn-small btn-ghost" id="fleetTpCancelBtn">/tpcancel all</button>
+                <button class="btn btn-teal" id="fleetTpaBtn">/tpa</button>
+                <button class="btn btn-teal" id="fleetTpaHereBtn">/tpahere</button>
+                <button class="btn btn-green" id="fleetTpAcceptBtn">/tpaccept</button>
+                <button class="btn btn-danger" id="fleetTpDenyBtn">/tpdeny</button>
+                <button class="btn btn-purple" id="fleetTpAutoBtn">/tpauto</button>
+                <button class="btn btn-small btn-ghost" id="fleetTpCancelBtn">/tpcancel</button>
             </div>
-            <div class="hint">Every button above sends the raw Minecraft command to all online fleet bots instantly — no
-                AI involved, no API cost.</div>
         </div>
 
-        <div id="fleetLog" class="log" style="margin-bottom:16px;"></div>
+        <div id="fleetLog" class="log" style="margin-bottom:12px;"></div>
         <div id="fleetGrid" class="grid">
             <div class="empty-state" style="grid-column:1/-1;">
-                <div class="big">🤖</div>No fleet deployed yet.<br>Enter your server IP above and hit DEPLOY FLEET.
+                <div class="big">+</div>No fleet deployed yet.<br>Enter server IP above and hit DEPLOY FLEET.
             </div>
         </div>
     </div>
@@ -643,12 +481,12 @@
         <div class="card">
             <div class="row" style="align-items:center;">
                 <span id="consoleDot" class="dot offline"></span>
-                <h2 style="margin:0;">Console — your friendly AI companion</h2>
+                <h2 style="margin:0;">Console</h2>
                 <div class="spacer"></div>
                 <button id="consoleConnectBtn" class="btn btn-small">Connect</button>
                 <button id="consoleRestartBtn" class="btn btn-small">Restart</button>
                 <button id="consoleStopBtn" class="btn btn-danger btn-small">Disconnect</button>
-                <button id="consoleRecreateBtn" class="btn btn-purple btn-small">Recreate Console</button>
+                <button id="consoleRecreateBtn" class="btn btn-purple btn-small">Recreate</button>
             </div>
             <div class="row" style="margin-top:10px;">
                 <div class="stat"><b id="consoleHealth">health: -</b></div>
@@ -660,17 +498,15 @@
         </div>
 
         <div class="card">
-            <h2>Chat with Console</h2>
+            <h2>Chat</h2>
             <div id="consoleChat" class="chat-window"></div>
             <div class="chat-input-row">
-                <input id="consoleInput" placeholder="Say something to Console..." spellcheck="false">
+                <input id="consoleInput" placeholder="Type a message..." spellcheck="false">
                 <button id="consoleSendBtn" class="btn btn-primary">Send</button>
             </div>
-            <div class="hint">Console replies via /w RocketLeagueGent so messages stay private. TPA buttons for Console:
-            </div>
-            <div class="row" style="margin-top:8px;">
+            <div class="row" style="margin-top:10px;">
                 <div class="field">
-                    <label>Console TPA target</label>
+                    <label>TPA target</label>
                     <input id="console-tpa-target" value="RocketLeagueGent" spellcheck="false">
                 </div>
                 <button class="btn btn-teal btn-small" id="consoleTpaBtn">/tpa</button>
@@ -700,6 +536,20 @@
     <script>
         const socket = io({ path: window.location.pathname + 'socket.io' });
 
+        socket.on('connect', () => {
+            $('msStatus').textContent = 'connected';
+            $('msStatus').className = 'status-badge online';
+        });
+        socket.on('disconnect', (reason) => {
+            $('msStatus').textContent = 'disconnected: ' + reason;
+            $('msStatus').className = 'status-badge offline';
+        });
+        socket.on('connect_error', (err) => {
+            $('msStatus').textContent = 'connect failed';
+            $('msStatus').className = 'status-badge offline';
+            toast('Cannot reach MindServer: ' + err.message, 'error');
+        });
+
         // ---------- global state ----------
         let currentAgents = [];
         let lastStates = {};
@@ -708,6 +558,14 @@
         let fleetRenderEnabled = true;
         const consoleChatLog = [];
         const fleetNames = new Set();
+
+        // Pre-populate fleet form from settings.js
+        fetch('/api/settings').then(r => r.json()).then(s => {
+            if (s.host) $('fleet-host').value = s.host;
+            if (s.port) $('fleet-port').value = s.port;
+            if (s.auth) $('fleet-auth').value = s.auth;
+            if (s.minecraft_version) $('fleet-version').value = s.minecraft_version;
+        }).catch(() => {});
 
         const $ = (id) => document.getElementById(id);
         const escapeHtml = (s) => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -740,18 +598,15 @@
         // ---------- master helpers ----------
         function masterName() { return $('fleet-master').value.trim() || 'RocketLeagueGent'; }
 
-        // Send a raw chat command to one agent (no LLM).
         function execCmd(name, command) {
             socket.emit('execute-chat-command', name, { command });
             logTo($('fleetLog'), `${name}: ${command}`, 'ok');
         }
-        // Send a raw chat command to the whole fleet.
         function broadcastCmd(command) {
             socket.emit('broadcast-chat-command', { command, only_fleet: true });
             logTo($('fleetLog'), `FLEET: ${command}`, 'ok');
         }
 
-        // ---------- settings cache ----------
         function fetchAgentSettings(name) {
             return new Promise((resolve) => {
                 if (agentSettings[name]) return resolve(agentSettings[name]);
@@ -769,7 +624,6 @@
         $('spawnFleetBtn').addEventListener('click', async () => {
             let host = $('fleet-host').value.trim();
             if (!host) return toast('Enter a server host.', 'error');
-            // Strip port from host if user typed "host:port" in host field
             const colonIdx = host.lastIndexOf(':');
             if (colonIdx > 0 && /^\d+$/.test(host.slice(colonIdx + 1))) {
                 const extractedPort = host.slice(colonIdx + 1);
@@ -814,7 +668,7 @@
             const msg = $('fleet-broadcast').value.trim();
             if (!msg) return toast('Type a command first.', 'error');
             socket.emit('broadcast-message', { message: msg, from: masterName(), only_fleet: true });
-            logTo($('fleetLog'), `Broadcast: "${msg}" → fleet`, 'ok');
+            logTo($('fleetLog'), `Broadcast: "${msg}" -> fleet`, 'ok');
         });
 
         $('destroyFleetBtn').addEventListener('click', () => {
@@ -825,7 +679,6 @@
             }
         });
 
-        // ---------- Fleet-wide TPA ----------
         $('fleetTpaBtn').addEventListener('click', () => broadcastCmd(`/tpa ${$('fleet-tpa-target').value.trim() || masterName()}`));
         $('fleetTpaHereBtn').addEventListener('click', () => broadcastCmd(`/tpahere ${$('fleet-tpa-target').value.trim() || masterName()}`));
         $('fleetTpAcceptBtn').addEventListener('click', () => broadcastCmd('/tpaccept'));
@@ -833,10 +686,9 @@
         $('fleetTpAutoBtn').addEventListener('click', () => broadcastCmd('/tpauto'));
         $('fleetTpCancelBtn').addEventListener('click', () => broadcastCmd('/tpcancel'));
 
-        // ---------- Fleet view toggle ----------
         $('toggleViewsBtn').addEventListener('click', () => {
             fleetRenderEnabled = !fleetRenderEnabled;
-            $('toggleViewsBtn').textContent = `Perspectives: ${fleetRenderEnabled ? 'ON' : 'OFF'}`;
+            $('toggleViewsBtn').textContent = `PERSPECTIVES: ${fleetRenderEnabled ? 'ON' : 'OFF'}`;
             renderFleetGrid();
         });
 
@@ -852,33 +704,30 @@
             const target = prompt(`${verb} which player/bot?`, placeholder || '');
             if (target && target.trim()) {
                 fleetCommand(name, `${verb.toLowerCase()} ${target.trim()}`);
-                toast(`${verb} ${target.trim()} → ${name}`, 'ok');
+                toast(`${verb} ${target.trim()} -> ${name}`, 'ok');
             }
         }
 
-        // ---------- TPA helpers ----------
-        // tpaPlayer(bot): bot asks to teleport TO <target>
-        // tpaHere(bot): bot asks <target> to teleport TO it
-        // raw TPA buttons execute the command directly (no LLM).
         function tpaPlayer(name) {
             const target = prompt(`TPA to which player (${name})?`, masterName());
             if (target && target.trim()) execCmd(name, `/tpa ${target.trim()}`);
         }
         function tpaHere(name) {
-            const target = prompt(`TPAhere — call which player (${name})?`, masterName());
+            const target = prompt(`TPAhere -- call which player (${name})?`, masterName());
             if (target && target.trim()) execCmd(name, `/tpahere ${target.trim()}`);
         }
 
         let lastFleetSig = '';
         function fleetRosterSig(fleet) {
-            return fleet.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${agentSettings[a.name]?.render_bot_view}`).join('§');
+            return fleet.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${agentSettings[a.name]?.render_bot_view}`).join('\u00a7');
         }
 
         function fleetCardHTML(a) {
             const canView = agentSettings[a.name]?.render_bot_view === true && a.in_game;
             const dotClass = a.in_game ? 'online' : (a.socket_connected ? 'joining' : '');
+            const onlineClass = a.in_game ? ' card-online' : '';
             return `
-            <div class="agent-card" id="fleet-${a.name}">
+            <div class="agent-card${onlineClass}" id="fleet-${a.name}">
                 <div class="agent-head">
                     <span class="dot ${dotClass}" id="fs-${a.name}-dot"></span>
                     <span class="agent-name">${escapeHtml(a.name)}</span>
@@ -887,15 +736,15 @@
                 <div class="agent-body">
                     ${canView ? `<div class="viewer-wrap"><iframe class="viewer-frame" id="fs-${a.name}-view" src="http://localhost:${a.viewerPort}"></iframe></div>` : ''}
                     <div class="stats-grid">
-                        <div class="stat">⚔ <b id="fs-${a.name}-health">-</b></div>
-                        <div class="stat">🍖 <b id="fs-${a.name}-hunger">-</b></div>
-                        <div class="stat">📍 <span id="fs-${a.name}-pos">-</span></div>
-                        <div class="stat">🌍 <b id="fs-${a.name}-biome">-</b></div>
-                        <div class="stat" style="grid-column:1/-1;">⚙ <b id="fs-${a.name}-action">...</b></div>
+                        <div class="stat">HP <b id="fs-${a.name}-health">-</b></div>
+                        <div class="stat">FD <b id="fs-${a.name}-hunger">-</b></div>
+                        <div class="stat">POS <span id="fs-${a.name}-pos">-</span></div>
+                        <div class="stat">BIO <b id="fs-${a.name}-biome">-</b></div>
+                        <div class="stat" style="grid-column:1/-1;">ACT <b id="fs-${a.name}-action">...</b></div>
                     </div>
-                    <div class="msg-line" id="fs-${a.name}-msg">“”</div>
+                    <div class="msg-line" id="fs-${a.name}-msg"></div>
                     <div class="tpa-box">
-                        <div class="tpa-title">Teleport (instant, no AI)</div>
+                        <div class="tpa-title">Teleport</div>
                         <div class="tpa-actions">
                             <button class="btn btn-teal btn-small" onclick="tpaPlayer('${a.name}')">tpa</button>
                             <button class="btn btn-teal btn-small" onclick="tpaHere('${a.name}')">tpahere</button>
@@ -912,7 +761,7 @@
                         <button class="btn btn-small" onclick="minePrompt('${a.name}')">Mine</button>
                         <button class="btn btn-small btn-green" onclick="chatPrompt('${a.name}')">Chat</button>
                         <button class="btn btn-small" onclick="fleetCommand('${a.name}','!stop')">Stop</button>
-                        ${canView ? `<button class="btn btn-small btn-purple" onclick="toggleOneView('${a.name}')">👁</button>` : ''}
+                        ${canView ? `<button class="btn btn-small btn-purple" onclick="toggleOneView('${a.name}')">view</button>` : ''}
                     </div>
                 </div>
             </div>`;
@@ -930,7 +779,7 @@
             const fleet = currentAgents.filter(a => a.fleet === true);
             if (fleet.length === 0) {
                 lastFleetSig = '';
-                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">🤖</div>No fleet deployed yet.<br>Enter your server IP above and hit DEPLOY FLEET.</div>';
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">+</div>No fleet deployed yet.<br>Enter server IP above and hit DEPLOY FLEET.</div>';
                 return;
             }
             const sig = fleetRosterSig(fleet);
@@ -946,6 +795,12 @@
 
         function updateFleetLive() {
             currentAgents.filter(a => a.fleet).forEach(a => {
+                const dot = $(`fs-${a.name}-dot`);
+                if (dot) {
+                    dot.className = 'dot' + (a.in_game ? ' online' : (a.socket_connected ? ' joining' : ''));
+                }
+                const card = $(`fleet-${a.name}`);
+                if (card) card.className = 'agent-card' + (a.in_game ? ' card-online' : '');
                 const st = lastStates[a.name];
                 const gm = st?.gameplay || {};
                 const act = st?.action || {};
@@ -956,7 +811,7 @@
                 set('biome', gm.biome ?? '-');
                 set('action', act.current ?? '...');
                 const msgEl = $(`fs-${a.name}-msg`);
-                if (msgEl) msgEl.textContent = '“' + (lastMessages[a.name] || '') + '”';
+                if (msgEl) msgEl.textContent = lastMessages[a.name] || '';
             });
         }
 
@@ -965,7 +820,7 @@
             if (!block || !block.trim()) return;
             const num = prompt('How many?', '16');
             fleetCommand(name, `mine ${num} ${block.trim()}`);
-            toast(`Mine ${block.trim()} → ${name}`, 'ok');
+            toast(`Mine ${block.trim()} -> ${name}`, 'ok');
         }
         function chatPrompt(name) {
             const m = prompt('Message to send:', '');
@@ -997,7 +852,6 @@
             socket.emit('send-message', 'Console', { from: masterName(), message: msg });
         }
 
-        // Console TPA buttons (raw commands, no LLM)
         $('consoleTpaBtn').addEventListener('click', () => execCmd('Console', `/tpa ${$('console-tpa-target').value.trim() || masterName()}`));
         $('consoleTpaHereBtn').addEventListener('click', () => execCmd('Console', `/tpahere ${$('console-tpa-target').value.trim() || masterName()}`));
         $('consoleTpAcceptBtn').addEventListener('click', () => execCmd('Console', '/tpaccept'));
@@ -1076,14 +930,15 @@
 
         let lastAgentsSig = '';
         function agentsRosterSig(agents) {
-            return agents.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${a.fleet}|${agentSettings[a.name]?.render_bot_view}`).join('§');
+            return agents.map(a => `${a.name}|${a.in_game}|${a.socket_connected}|${a.viewerPort}|${a.fleet}|${agentSettings[a.name]?.render_bot_view}`).join('\u00a7');
         }
 
         function agentCardHTML(a) {
             const canView = agentSettings[a.name]?.render_bot_view === true && a.in_game;
             const dotClass = a.in_game ? 'online' : (a.socket_connected ? 'joining' : '');
+            const onlineClass = a.in_game ? ' card-online' : '';
             return `
-            <div class="agent-card" id="agent-${a.name}">
+            <div class="agent-card${onlineClass}" id="agent-${a.name}">
                 <div class="agent-head">
                     <span class="dot ${dotClass}" id="ag-${a.name}-dot"></span>
                     <span class="agent-name">${escapeHtml(a.name)}</span>
@@ -1092,15 +947,15 @@
                 <div class="agent-body">
                     ${canView ? `<div class="viewer-wrap"><iframe class="viewer-frame" id="ag-${a.name}-view" src="http://localhost:${a.viewerPort}"></iframe></div>` : ''}
                     <div class="stats-grid">
-                        <div class="stat">⚔ <b id="ag-${a.name}-health">-</b></div>
-                        <div class="stat">🍖 <b id="ag-${a.name}-hunger">-</b></div>
-                        <div class="stat">📍 <span id="ag-${a.name}-pos">-</span></div>
-                        <div class="stat">🌍 <b id="ag-${a.name}-biome">-</b></div>
-                        <div class="stat" style="grid-column:1/-1;">⚙ <b id="ag-${a.name}-action">...</b></div>
+                        <div class="stat">HP <b id="ag-${a.name}-health">-</b></div>
+                        <div class="stat">FD <b id="ag-${a.name}-hunger">-</b></div>
+                        <div class="stat">POS <span id="ag-${a.name}-pos">-</span></div>
+                        <div class="stat">BIO <b id="ag-${a.name}-biome">-</b></div>
+                        <div class="stat" style="grid-column:1/-1;">ACT <b id="ag-${a.name}-action">...</b></div>
                     </div>
-                    <div class="msg-line" id="ag-${a.name}-msg">“”</div>
+                    <div class="msg-line" id="ag-${a.name}-msg"></div>
                     <div class="tpa-box">
-                        <div class="tpa-title">Teleport (instant, no AI)</div>
+                        <div class="tpa-title">Teleport</div>
                         <div class="tpa-actions">
                             <button class="btn btn-teal btn-small" onclick="tpaPlayer('${a.name}')">tpa</button>
                             <button class="btn btn-teal btn-small" onclick="tpaHere('${a.name}')">tpahere</button>
@@ -1126,7 +981,7 @@
             const grid = $('agentsGrid');
             if (currentAgents.length === 0) {
                 lastAgentsSig = '';
-                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">🤖</div>No agents running.</div>';
+                grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;"><div class="big">+</div>No agents running.</div>';
                 return;
             }
             const sig = agentsRosterSig(currentAgents);
@@ -1140,6 +995,12 @@
 
         function updateAgentsLive() {
             currentAgents.forEach(a => {
+                const dot = $(`ag-${a.name}-dot`);
+                if (dot) {
+                    dot.className = 'dot' + (a.in_game ? ' online' : (a.socket_connected ? ' joining' : ''));
+                }
+                const card = $(`agent-${a.name}`);
+                if (card) card.className = 'agent-card' + (a.in_game ? ' card-online' : '');
                 const st = lastStates[a.name];
                 const gm = st?.gameplay || {};
                 const act = st?.action || {};
@@ -1150,7 +1011,7 @@
                 set('biome', gm.biome ?? '-');
                 set('action', act.current ?? '...');
                 const msgEl = $(`ag-${a.name}-msg`);
-                if (msgEl) msgEl.textContent = '“' + (lastMessages[a.name] || '') + '”';
+                if (msgEl) msgEl.textContent = lastMessages[a.name] || '';
             });
         }
 

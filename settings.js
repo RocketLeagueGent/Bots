@@ -1,12 +1,12 @@
 const settings = {
     "minecraft_version": "auto",
-    "host": "VanillaSMP_S2.aternos.me",
+    "host": "smp.sarris.dev",
     "port": 19523,
     "auth": "offline",
 
     "mindserver_port": 8081,
     "auto_open_ui": true,
-    
+
     "base_profile": "survival",
     "profiles": [],
 
@@ -22,7 +22,7 @@ const settings = {
 
     "allow_insecure_coding": false,
     "allow_vision": false,
-    "blocked_actions" : [],
+    "blocked_actions": [],
     "code_timeout_mins": -1,
     "relevant_docs_count": 5,
 
@@ -35,7 +35,7 @@ const settings = {
 
     "spawn_timeout": 60,
     "block_place_delay": 200,
-  
+
     "log_all_prompts": false,
 };
 

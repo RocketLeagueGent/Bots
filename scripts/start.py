@@ -1,6 +1,6 @@
 """
 MindCraft Dashboard
-Usage: py start.py
+Usage: py scripts/start.py
 """
 
 import subprocess
@@ -12,7 +12,7 @@ import msvcrt
 from pathlib import Path
 from collections import deque
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 VIAPROXY_DIR = ROOT / "services" / "viaproxy"
 VIAPROXY_JAR = VIAPROXY_DIR / "ViaProxy-3.4.13-SNAPSHOT.jar"
 VIAPROXY_YML = VIAPROXY_DIR / "viaproxy.yml"

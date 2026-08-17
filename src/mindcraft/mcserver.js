@@ -143,8 +143,15 @@ export async function getServer(host, port, version) {
     const isSupported = mc.supportedVersions.some(v => 
         serverVersion === v || (serverVersion.startsWith(v) && serverVersion.charAt(v.length) === '.')
     ); // Checks version or parent version (e.g. if 1.7 is supported then 1.7.2 will be allowed)
-     if (!isSupported)
-        throw new Error(`MC server was found ${serverString}, but version is unsupported. Supported versions are: ${mc.supportedVersions.join(", ")}.`);
+     if (!isSupported) {
+        // Server reports a version mineflayer doesn't speak (e.g. 26.2).
+        // Fall back to the highest supported version — ViaProxy or similar
+        // proxies will translate the protocol for us.
+        const highestSupported = mc.supportedVersions[mc.supportedVersions.length - 1];
+        console.log(`MC server found ${serverString}, but version ${serverVersion} is unsupported by mineflayer.`);
+        console.log(`Falling back to mineflayer's highest supported version: ${highestSupported} (ViaProxy will translate).`);
+        server.version = highestSupported;
+    }
     else if (version !== "auto" && server.version !== version)
         throw new Error(`MC server was found ${serverString}, but version is incorrect. Expected ${version}, but found ${server.version}. Check the server version in settings.js.`);
     else

@@ -17,7 +17,14 @@ This is an **ESM-only** (`"type": "module"`) Node.js project. No CommonJS.
 ```
 main.js                     → reads profiles, calls mindcraft.createAgent() for each
 settings.js                 → root config (host, port, auth, default settings)
-console.json                → default bot profile for the Console bot
+
+scripts/
+  start.py                  → dashboard launcher (ViaProxy + MindServer)
+  StartBot.bat              → quick-launch single bot
+
+profiles/                   → bot profile JSONs (console.json, andy.json, etc.)
+mods/                       → Minecraft mod JARs (ViaFabricPlus, bypass-fabric-check)
+patches/                    → node_modules patches + temp_chunk_patch.js
 
 src/mindcraft/
   mindcraft.js              → createAgent(), detectServer(), server version cache
@@ -52,7 +59,7 @@ src/process/
 - **Model API selection is automatic.** `selectAPI()` in `_model_map.js` matches profile model strings to provider prefixes. If no match, it falls back to pattern-matching model names (gpt→openai, claude→anthropic, etc.).
 - **Fleet credentials are auto-generated** and persisted to `fleet_credentials.json`. On first join a bot `/register`s; on rejoin it `/login`s. This file is gitignored.
 - **Server version cache** (`mindcraft.js`): `detectServer()` caches pings for 5 minutes. This prevents 198-bot fleets from spamming the server.
-- **Patches are stale.** The `patches/` directory has patches for older versions (mineflayer 4.33.0, minecraft-data 3.97.0) but package.json now uses 4.37.1/3.113.2. They may not apply cleanly. `temp_chunk_patch.js` manually patches `prismarine-chunk` for MC 26.x support — run it manually after `npm install` if connecting to 1.26.x servers.
+- **Patches are stale.** The `patches/` directory has patches for older versions (mineflayer 4.33.0, minecraft-data 3.97.0) but package.json now uses 4.37.1/3.113.2. They may not apply cleanly. `patches/temp_chunk_patch.js` manually patches `prismarine-chunk` for MC 26.x support — run it manually after `npm install` if connecting to 1.26.x servers.
 - **`npm install` often needs `--no-optional`** to skip `gl` native builds. Vision/rendering is disabled by default (`allow_vision: false`).
 - **`connection_handler.js`** has a `[LoginGuard]` prefix in `validateNameFormat` but not in `handleDisconnection` — this is inconsistent and may be intentional or a bug.
 - **Profiles cascade:** individual profile → base profile (survival/creative/etc.) → `_default.json`. Later values override earlier ones.

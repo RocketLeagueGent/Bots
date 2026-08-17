@@ -141,9 +141,28 @@ export function createMindServer(host_public = false, port = 8080) {
     // Serve the Console profile so the UI can recreate the Console bot.
     app.get('/api/console-profile', (req, res) => {
         try {
-            const consolePath = path.join(__dirname, '../../console.json');
+            const consolePath = path.join(__dirname, '../../profiles/console.json');
             const profile = JSON.parse(readFileSync(consolePath, 'utf8'));
             res.json(profile);
+        } catch (e) {
+            res.status(500).json({ error: String(e) });
+        }
+    });
+
+    // Serve key settings so the web UI can pre-populate forms.
+    app.get('/api/settings', (req, res) => {
+        try {
+            const settingsPath = path.join(__dirname, '../../settings.js');
+            const raw = readFileSync(settingsPath, 'utf8');
+            const match = raw.match(/const\s+settings\s*=\s*(\{[\s\S]*?\});/);
+            if (!match) return res.json({});
+            const settings = eval('(' + match[1] + ')');
+            res.json({
+                host: settings.host || '',
+                port: settings.port || 25565,
+                auth: settings.auth || 'offline',
+                minecraft_version: settings.minecraft_version || 'auto',
+            });
         } catch (e) {
             res.status(500).json({ error: String(e) });
         }
@@ -306,69 +325,81 @@ export function createMindServer(host_public = false, port = 8080) {
         });
 
         socket.on('spawn-fleet', async (data, callback) => {
-            const host = data.host || '127.0.0.1';
-            const port = data.port !== undefined && data.port !== null && data.port !== '' ? Number(data.port) : -1;
-            const auth = data.auth || 'offline';
-            const minecraft_version = data.minecraft_version || 'auto';
-            const count = Math.min(Math.max(parseInt(data.count) || 1, 1), 200);
-            const masterName = data.master_name || 'RocketLeagueGent';
-            const render_view = data.render_view === true;
+            try {
+                const host = data.host || '127.0.0.1';
+                const port = data.port !== undefined && data.port !== null && data.port !== '' ? Number(data.port) : -1;
+                const auth = data.auth || 'offline';
+                const minecraft_version = data.minecraft_version || 'auto';
+                const count = Math.min(Math.max(parseInt(data.count) || 1, 1), 200);
+                const masterName = data.master_name || 'RocketLeagueGent';
+                const render_view = data.render_view === true;
 
-            console.log(`Spawning fleet of ${count} agents on ${host}:${port} for master ${masterName}...`);
-            // Pre-generate all usernames so every bot knows the full friendly roster.
-            const roster = [];
-            while (roster.length < count) {
-                let username = generateUsername();
-                let tries = 0;
-                while ((agent_connections[username] || roster.includes(username)) && tries < 20) {
-                    tries++;
-                    username = generateUsername();
+                console.log(`[spawn-fleet] Spawning ${count} agents on ${host}:${port} for master ${masterName}...`);
+                // Pre-generate all usernames so every bot knows the full friendly roster.
+                const roster = [];
+                while (roster.length < count) {
+                    let username = generateUsername();
+                    let tries = 0;
+                    while ((agent_connections[username] || roster.includes(username)) && tries < 20) {
+                        tries++;
+                        username = generateUsername();
+                    }
+                    if (agent_connections[username] || roster.includes(username)) break;
+                    roster.push(username);
                 }
-                if (agent_connections[username] || roster.includes(username)) break;
-                roster.push(username);
+                console.log(`[spawn-fleet] Generated ${roster.length} usernames: ${roster.slice(0, 3).join(', ')}...`);
+                const created = [];
+                const failed = [];
+                for (let i = 0; i < roster.length; i++) {
+                    const username = roster[i];
+                    console.log(`[spawn-fleet] (${i + 1}/${roster.length}) Creating ${username}...`);
+                    const profile = buildFleetProfile(username, masterName);
+                    ensureFleetCredentials(profile);
+                    profile.fleet_bot = true;
+                    profile.fleet_names = roster;
+                    const settings = {
+                        profile,
+                        minecraft_version,
+                        host,
+                        port,
+                        auth,
+                        base_profile: 'survival',
+                        load_memory: false,
+                        init_message: '',
+                        only_chat_with: [masterName],
+                        render_bot_view: render_view,
+                        allow_vision: false,
+                        chat_ingame: true,
+                        show_command_syntax: 'shortened',
+                        narrate_behavior: false,
+                        spawn_timeout: 60,
+                        max_messages: 10,
+                        max_commands: 2,
+                        num_examples: 2
+                    };
+                    try {
+                        let result = await createAgentFromSettings(settings);
+                        if (result.success && agent_connections[username]) {
+                            agent_connections[username].fleet = true;
+                            created.push({ username, viewerPort: agent_connections[username].viewer_port });
+                            console.log(`[spawn-fleet] ${username} created OK`);
+                        }
+                        else {
+                            console.error(`[spawn-fleet] ${username} FAILED: ${result.error}`);
+                            failed.push({ username, error: result.error });
+                        }
+                    } catch (innerErr) {
+                        console.error(`[spawn-fleet] ${username} EXCEPTION:`, innerErr);
+                        failed.push({ username, error: innerErr.message || String(innerErr) });
+                    }
+                }
+                agentsStatusUpdate();
+                console.log(`[spawn-fleet] Done. Created: ${created.length}, Failed: ${failed.length}`);
+                if (callback) callback({ created, failed });
+            } catch (err) {
+                console.error('[spawn-fleet] FATAL:', err);
+                if (callback) callback({ created: [], failed: [{ error: err.message || String(err) }] });
             }
-            const created = [];
-            const failed = [];
-            for (let username of roster) {
-                const profile = buildFleetProfile(username, masterName);
-                ensureFleetCredentials(profile);
-                profile.fleet_bot = true;
-                profile.fleet_names = roster;
-                const settings = {
-                    profile,
-                    minecraft_version,
-                    host,
-                    port,
-                    auth,
-                    base_profile: 'survival',
-                    load_memory: false,
-                    // empty init_message -> no LLM call at spawn (198 calls at once
-                    // would hit the API rate limit). Bots greet in chat instead.
-                    init_message: '',
-                    // Fleet bots ONLY talk to their master — random players cannot
-                    // trigger LLM calls (OpenRouter free tier is 50 req/day).
-                    only_chat_with: [masterName],
-                    render_bot_view: render_view,
-                    allow_vision: false,
-                    chat_ingame: true,
-                    show_command_syntax: 'shortened',
-                    narrate_behavior: false,
-                    spawn_timeout: 60,
-                    max_messages: 10,
-                    max_commands: 2,
-                    num_examples: 2
-                };
-                let result = await createAgentFromSettings(settings);
-                if (result.success && agent_connections[username]) {
-                    agent_connections[username].fleet = true;
-                    created.push({ username, viewerPort: agent_connections[username].viewer_port });
-                }
-                else {
-                    failed.push({ username, error: result.error });
-                }
-            }
-            agentsStatusUpdate();
-            if (callback) callback({ created, failed });
         });
 
         socket.on('broadcast-message', (data) => {

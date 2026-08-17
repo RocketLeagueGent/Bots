@@ -12,7 +12,7 @@ npm install --no-optional
 copy keys.json.example keys.json
 
 # 3. Start the dashboard
-py start.py
+py scripts/start.py
 ```
 
 ## Dashboard Commands

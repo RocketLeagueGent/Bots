@@ -8,7 +8,7 @@ mindcraft.init()
 
 # Get the directory of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
-profile_path = os.path.abspath(os.path.join(script_dir, '..', '..', 'andy.json'))
+profile_path = os.path.abspath(os.path.join(script_dir, '..', '..', 'profiles', 'andy.json'))
 
 # Load agent settings from a JSON file
 try:
